@@ -1,0 +1,72 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-05-27T18:06:25.4770487-04:00",
+  "phase": null,
+  "phase_name": "default",
+  "phase_dir": ".planning",
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "completed_tasks": [
+    {
+      "id": 1,
+      "name": "Batch 0 baseline scaffold and Batch 1 OpenAPI contract",
+      "status": "done",
+      "commit": "01eeda3"
+    },
+    {
+      "id": 2,
+      "name": "Batch 2 dependency install and validation",
+      "status": "done",
+      "commit": "c9e93be"
+    }
+  ],
+  "remaining_tasks": [
+    {
+      "id": 3,
+      "name": "Consultant review of Batch 2 result",
+      "status": "pending_human"
+    },
+    {
+      "id": 4,
+      "name": "Next approved micro-batch: API contract validation/type-generation tooling before handlers",
+      "status": "not_started"
+    }
+  ],
+  "blockers": [],
+  "human_actions_pending": [
+    {
+      "action": "Review the Batch 2 result and approve the next prompt",
+      "context": "Dependencies are installed and validation passed; next work should remain tooling-only unless the consultant changes direction.",
+      "blocking": true
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Keep OpenAPI as the source of truth before writing route handlers.",
+      "rationale": "The contract was corrected to include operationId values and avoid YAML merge anchors before implementation.",
+      "phase": null
+    },
+    {
+      "decision": "Do not add DB, auth, handlers, UI product features, imports, exports, or runtime traceability logic yet.",
+      "rationale": "Current batches are scaffold, contract, and install validation only.",
+      "phase": null
+    }
+  ],
+  "uncommitted_files": [
+    {
+      "path": "PLAN.md",
+      "status": "untracked",
+      "note": "Intentionally left untracked per consultant instruction."
+    }
+  ],
+  "ignored_artifacts": [
+    "node_modules/",
+    ".next/",
+    "next-env.d.ts",
+    "tsconfig.tsbuildinfo"
+  ],
+  "next_action": "Paste the Batch 2 result back to the consultant, then wait for either a config-normalization approval or the API contract validation/type-generation tooling prompt.",
+  "context_notes": "No formal GSD phase directory exists in this repository, so the handoff uses the default .planning location. Batch 2 is already committed at c9e93be. Only PLAN.md is untracked; generated install/build artifacts are ignored."
+}
