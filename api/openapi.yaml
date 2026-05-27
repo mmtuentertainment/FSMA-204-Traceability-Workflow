@@ -1,0 +1,313 @@
+openapi: 3.1.0
+info:
+  title: FSMA 204 Traceability Workflow API
+  version: 0.1.0
+  description: Readiness workflow contract for human-reviewed FSMA 204 traceability records; not compliance certification, legal advice, or FDA endorsement.
+servers:
+  - url: /
+security:
+  - bearerAuth: []
+paths:
+  /api/traceability/lots:
+    get:
+      operationId: listTraceabilityLots
+      summary: List traceability lots
+      responses:
+        "200": { description: Traceability lots, content: { application/json: { schema: { $ref: "#/components/schemas/TraceLotList" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    post:
+      operationId: createTraceabilityLot
+      summary: Create a traceability lot
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/TraceLotCreate" } } } }
+      responses:
+        "201": { description: Traceability lot created, content: { application/json: { schema: { $ref: "#/components/schemas/TraceLot" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/traceability/events:
+    get:
+      operationId: listTraceabilityEvents
+      summary: List traceability events
+      responses:
+        "200": { description: Traceability events, content: { application/json: { schema: { $ref: "#/components/schemas/TraceEventList" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    post:
+      operationId: createTraceabilityEvent
+      summary: Create a receiving, transformation, or shipping event
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/TraceEventCreate" } } } }
+      responses:
+        "201": { description: Traceability event created, content: { application/json: { schema: { $ref: "#/components/schemas/TraceEvent" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/traceability/exceptions:
+    get:
+      operationId: listTraceabilityExceptions
+      summary: List human-review exceptions
+      responses:
+        "200": { description: Exceptions, content: { application/json: { schema: { $ref: "#/components/schemas/ExceptionList" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/traceability/exceptions/{exceptionId}:
+    patch:
+      operationId: updateTraceabilityException
+      summary: Update exception review status
+      parameters:
+        - { $ref: "#/components/parameters/ExceptionId" }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/ExceptionPatch" } } } }
+      responses:
+        "200": { description: Exception updated, content: { application/json: { schema: { $ref: "#/components/schemas/ExceptionRecord" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/traceability/supplier-requests:
+    get:
+      operationId: listSupplierRequests
+      summary: List supplier KDE requests
+      responses:
+        "200": { description: Supplier requests, content: { application/json: { schema: { $ref: "#/components/schemas/SupplierRequestList" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    post:
+      operationId: createSupplierRequest
+      summary: Create a supplier KDE request
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/SupplierRequestCreate" } } } }
+      responses:
+        "201": { description: Supplier request created, content: { application/json: { schema: { $ref: "#/components/schemas/SupplierRequest" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/traceability/supplier-requests/{supplierRequestId}:
+    patch:
+      operationId: updateSupplierRequest
+      summary: Update supplier request status
+      parameters:
+        - { $ref: "#/components/parameters/SupplierRequestId" }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/SupplierRequestPatch" } } } }
+      responses:
+        "200": { description: Supplier request updated, content: { application/json: { schema: { $ref: "#/components/schemas/SupplierRequest" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/traceability/mock-recalls:
+    post:
+      operationId: createMockRecall
+      summary: Start a human-reviewed mock recall readiness run
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/MockRecallCreate" } } } }
+      responses:
+        "201": { description: Mock recall created, content: { application/json: { schema: { $ref: "#/components/schemas/MockRecall" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/traceability/mock-recalls/{mockRecallId}:
+    get:
+      operationId: getMockRecall
+      summary: Get mock recall readiness status
+      parameters: [{ $ref: "#/components/parameters/MockRecallId" }]
+      responses:
+        "200": { description: Mock recall, content: { application/json: { schema: { $ref: "#/components/schemas/MockRecall" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /api/traceability/mock-recalls/{mockRecallId}/packet.csv:
+    get:
+      operationId: downloadMockRecallPacketCsv
+      summary: Download FDA-style sortable CSV packet
+      parameters: [{ $ref: "#/components/parameters/MockRecallId" }]
+      responses:
+        "200": { description: CSV packet content; export generation is future work, content: { text/csv: { schema: { type: string } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Placeholder for future server-side auth; tenant context is derived by the server.
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 200 }
+    ExceptionId: { name: exceptionId, in: path, required: true, schema: { type: string } }
+    SupplierRequestId: { name: supplierRequestId, in: path, required: true, schema: { type: string } }
+    MockRecallId: { name: mockRecallId, in: path, required: true, schema: { type: string } }
+  responses:
+    Unauthorized:
+      description: Authentication is missing or invalid
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    Forbidden:
+      description: Authenticated user is not allowed to access the resource
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    Conflict:
+      description: Request conflicts with current resource state or idempotency history
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    ValidationError:
+      description: Request validation failed
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    RateLimited:
+      description: Too many requests
+      headers:
+        Retry-After: { description: Seconds to wait before retrying, schema: { type: integer, minimum: 1 } }
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri-reference }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string, format: uri-reference }
+    ReviewStatus: { type: string, enum: [pending_review, needs_info, reviewed, closed] }
+    SourceDocumentRef:
+      type: string
+      description: Metadata reference to a source document; file upload is out of scope.
+    TraceLotList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/TraceLot" } }
+    TraceLot:
+      type: object
+      required: [id, traceability_lot_code, status, human_review_required]
+      properties:
+        id: { type: string }
+        traceability_lot_code: { type: string }
+        normalized_tlc: { type: string }
+        item_description: { type: string }
+        status: { type: string, enum: [active, held, shipped, under_mock_recall, closed] }
+        review_status: { $ref: "#/components/schemas/ReviewStatus" }
+        human_review_required: { type: boolean }
+        source_document_ref: { $ref: "#/components/schemas/SourceDocumentRef" }
+    TraceLotCreate:
+      type: object
+      required: [traceability_lot_code, item_description]
+      properties:
+        traceability_lot_code: { type: string }
+        item_description: { type: string }
+        source_document_ref: { $ref: "#/components/schemas/SourceDocumentRef" }
+        human_review_required: { type: boolean, default: false }
+    TraceEventList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/TraceEvent" } }
+    TraceEvent:
+      type: object
+      required: [id, lot_id, event_type, occurred_at, human_review_required]
+      properties:
+        id: { type: string }
+        lot_id: { type: string }
+        event_type: { type: string, enum: [receiving, transformation, shipping] }
+        occurred_at: { type: string, format: date-time }
+        location_ref: { type: string }
+        counterparty_ref: { type: string }
+        linked_lot_ids: { type: array, items: { type: string } }
+        review_status: { $ref: "#/components/schemas/ReviewStatus" }
+        human_review_required: { type: boolean }
+        source_document_ref: { $ref: "#/components/schemas/SourceDocumentRef" }
+    TraceEventCreate:
+      type: object
+      required: [lot_id, event_type, occurred_at]
+      properties:
+        lot_id: { type: string }
+        event_type: { type: string, enum: [receiving, transformation, shipping] }
+        occurred_at: { type: string, format: date-time }
+        location_ref: { type: string }
+        counterparty_ref: { type: string }
+        linked_lot_ids: { type: array, items: { type: string } }
+        source_document_ref: { $ref: "#/components/schemas/SourceDocumentRef" }
+        human_review_required: { type: boolean, default: false }
+    ExceptionList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/ExceptionRecord" } }
+    ExceptionRecord:
+      type: object
+      required: [id, type, status, human_review_required]
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [missing_kde, ambiguous_lot_code, bol_invoice_mismatch, missing_supplier_document, missing_shipping_linkage, human_review_required] }
+        status: { type: string, enum: [open, in_review, resolved, deferred] }
+        lot_id: { type: string }
+        event_id: { type: string }
+        message: { type: string }
+        review_reason: { type: string, enum: [ambiguous_exemption, kill_step_review, imported_food_review, partial_exemption_review, ambiguous_lot_code, other] }
+        human_review_required: { type: boolean }
+        review_notes: { type: string }
+        source_document_ref: { $ref: "#/components/schemas/SourceDocumentRef" }
+    ExceptionPatch:
+      type: object
+      properties:
+        status: { type: string, enum: [open, in_review, resolved, deferred] }
+        review_reason: { type: string, enum: [ambiguous_exemption, kill_step_review, imported_food_review, partial_exemption_review, ambiguous_lot_code, other] }
+        review_notes: { type: string }
+        human_review_required: { type: boolean }
+    SupplierRequestList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/SupplierRequest" } }
+    SupplierRequest:
+      type: object
+      required: [id, supplier_ref, status]
+      properties:
+        id: { type: string }
+        supplier_ref: { type: string }
+        status: { type: string, enum: [drafted, sent, received, overdue, closed] }
+        requested_kdes: { type: array, items: { type: string } }
+        due_at: { type: string, format: date-time }
+        source_document_ref: { $ref: "#/components/schemas/SourceDocumentRef" }
+    SupplierRequestCreate:
+      type: object
+      required: [supplier_ref, requested_kdes]
+      properties:
+        supplier_ref: { type: string }
+        requested_kdes: { type: array, items: { type: string } }
+        due_at: { type: string, format: date-time }
+    SupplierRequestPatch:
+      type: object
+      properties:
+        status: { type: string, enum: [drafted, sent, received, overdue, closed] }
+        source_document_ref: { $ref: "#/components/schemas/SourceDocumentRef" }
+    MockRecall:
+      type: object
+      required: [id, root_lot_id, status]
+      properties:
+        id: { type: string }
+        root_lot_id: { type: string }
+        status: { type: string, enum: [queued, in_review, packet_ready, closed] }
+        packet_status: { type: string, enum: [not_requested, pending, ready] }
+        review_status: { $ref: "#/components/schemas/ReviewStatus" }
+        started_at: { type: string, format: date-time }
+    MockRecallCreate:
+      type: object
+      required: [root_lot_id]
+      properties:
+        root_lot_id: { type: string }
+        scope_notes: { type: string }
