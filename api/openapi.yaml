@@ -2,6 +2,9 @@ openapi: 3.1.0
 info:
   title: FSMA 204 Traceability Workflow API
   version: 0.1.0
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
   description: Readiness workflow contract for human-reviewed FSMA 204 traceability records; not compliance certification, legal advice, or FDA endorsement.
 servers:
   - url: /
