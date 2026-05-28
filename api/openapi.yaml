@@ -134,7 +134,7 @@ paths:
       summary: Get mock recall readiness status
       parameters: [{ $ref: "#/components/parameters/MockRecallId" }]
       responses:
-        "200": { description: Mock recall, content: { application/json: { schema: { $ref: "#/components/schemas/MockRecall" } } } }
+        "200": { description: Mock recall readiness detail, content: { application/json: { schema: { $ref: "#/components/schemas/MockRecallDetail" } } } }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -315,6 +315,49 @@ components:
         packet_status: { type: string, enum: [not_requested, pending, ready] }
         review_status: { $ref: "#/components/schemas/ReviewStatus" }
         started_at: { type: string, format: date-time }
+    MockRecallDetail:
+      type: object
+      required: [mockRecallId, status, scope, readinessSummary, packet, createdAt, updatedAt]
+      properties:
+        mockRecallId:
+          type: string
+          description: The mock recall identifier.
+        status:
+          type: string
+          enum: [draft, running, ready_for_human_review, packet_ready, closed]
+        scope:
+          type: object
+          description: Recall-readiness scope for human review, not a legal determination.
+          required: [productDescription, traceabilityLotCode, dateRangeStart, dateRangeEnd]
+          properties:
+            productDescription: { type: string }
+            traceabilityLotCode: { type: string }
+            dateRangeStart: { type: string, format: date }
+            dateRangeEnd: { type: string, format: date }
+        readinessSummary:
+          type: object
+          required: [affectedLotCount, affectedShipmentCount, openExceptionCount, supplierRequestCount, humanReviewRequired, humanReviewReasons]
+          properties:
+            affectedLotCount: { type: integer, minimum: 0 }
+            affectedShipmentCount: { type: integer, minimum: 0 }
+            openExceptionCount: { type: integer, minimum: 0 }
+            supplierRequestCount: { type: integer, minimum: 0 }
+            humanReviewRequired: { type: boolean }
+            humanReviewReasons:
+              type: array
+              items:
+                type: string
+                enum: [ambiguous_exemption, partial_exemption, imported_food_review, kill_step_review, lot_code_ambiguity, supplier_kde_gap, transformation_linkage_gap, shipping_linkage_gap]
+        packet:
+          type: object
+          description: Future FDA-style sortable CSV export reference.
+          required: [csvAvailable, csvHref, format]
+          properties:
+            csvAvailable: { type: boolean }
+            csvHref: { type: string, format: uri-reference }
+            format: { type: string, enum: [fda_style_sortable_csv] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
     MockRecallCreate:
       type: object
       required: [root_lot_id]

@@ -289,6 +289,41 @@ export interface components {
             /** Format: date-time */
             started_at?: string;
         };
+        MockRecallDetail: {
+            /** @description The mock recall identifier. */
+            mockRecallId: string;
+            /** @enum {string} */
+            status: "draft" | "running" | "ready_for_human_review" | "packet_ready" | "closed";
+            /** @description Recall-readiness scope for human review, not a legal determination. */
+            scope: {
+                productDescription: string;
+                traceabilityLotCode: string;
+                /** Format: date */
+                dateRangeStart: string;
+                /** Format: date */
+                dateRangeEnd: string;
+            };
+            readinessSummary: {
+                affectedLotCount: number;
+                affectedShipmentCount: number;
+                openExceptionCount: number;
+                supplierRequestCount: number;
+                humanReviewRequired: boolean;
+                humanReviewReasons: ("ambiguous_exemption" | "partial_exemption" | "imported_food_review" | "kill_step_review" | "lot_code_ambiguity" | "supplier_kde_gap" | "transformation_linkage_gap" | "shipping_linkage_gap")[];
+            };
+            /** @description Future FDA-style sortable CSV export reference. */
+            packet: {
+                csvAvailable: boolean;
+                /** Format: uri-reference */
+                csvHref: string;
+                /** @enum {string} */
+                format: "fda_style_sortable_csv";
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         MockRecallCreate: {
             root_lot_id: string;
             scope_notes?: string;
@@ -659,13 +694,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Mock recall */
+            /** @description Mock recall readiness detail */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MockRecall"];
+                    "application/json": components["schemas"]["MockRecallDetail"];
                 };
             };
             401: components["responses"]["Unauthorized"];
