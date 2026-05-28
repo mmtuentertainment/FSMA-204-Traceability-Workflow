@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "api:lint": "redocly lint api/openapi.yaml",
+    "api:types": "openapi-typescript api/openapi.yaml -o lib/api/generated/openapi-types.ts",
+    "api:types:check": "openapi-typescript api/openapi.yaml -o lib/api/generated/openapi-types.ts --check",
+    "api:check": "npm run api:lint && npm run api:types:check"
   },
   "engines": {
     "node": ">=20.9"
@@ -17,9 +21,11 @@
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
+    "@redocly/cli": "^2.31.5",
     "@types/node": "^20.19.41",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^6.0.3"
   }
 }
