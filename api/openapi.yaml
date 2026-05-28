@@ -74,6 +74,7 @@ paths:
         "200": { description: Exception updated, content: { application/json: { schema: { $ref: "#/components/schemas/ExceptionRecord" } } } }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/ValidationError" }
         "429": { $ref: "#/components/responses/RateLimited" }
@@ -110,6 +111,7 @@ paths:
         "200": { description: Supplier request updated, content: { application/json: { schema: { $ref: "#/components/schemas/SupplierRequest" } } } }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/ValidationError" }
         "429": { $ref: "#/components/responses/RateLimited" }
@@ -135,6 +137,7 @@ paths:
         "200": { description: Mock recall, content: { application/json: { schema: { $ref: "#/components/schemas/MockRecall" } } } }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/RateLimited" }
   /api/traceability/mock-recalls/{mockRecallId}/packet.csv:
     get:
@@ -145,6 +148,7 @@ paths:
         "200": { description: CSV packet content; export generation is future work, content: { text/csv: { schema: { type: string } } } }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/RateLimited" }
 components:
   securitySchemes:
@@ -167,6 +171,9 @@ components:
       content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
     Forbidden:
       description: Authenticated user is not allowed to access the resource
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    NotFound:
+      description: Resource not found.
       content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
     Conflict:
       description: Request conflicts with current resource state or idempotency history
