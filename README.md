@@ -1,6 +1,6 @@
 # FSMA 204 Workflow Product
 
-Baseline scaffold for an FSMA 204 traceability readiness workflow. This product should help teams prepare, review, and export traceability records; it must not claim compliance certification or replace human review.
+Conservative FSMA 204 traceability readiness workflow. This product should help teams prepare, review, and export traceability records; it must not claim compliance certification, provide legal advice, imply FDA endorsement, or automate exemption determinations.
 
 ## Stack
 
@@ -9,21 +9,20 @@ Baseline scaffold for an FSMA 204 traceability readiness workflow. This product 
 - npm
 - Node.js >= 20.9
 
-## Setup
+## Current State
 
-Dependencies are declared but not installed in Batch 0.
+- OpenAPI remains the source of truth at `api/openapi.yaml`.
+- Generated TypeScript contract types exist at `lib/api/generated/openapi-types.ts`.
+- Mock-recall not-found route handlers exist and are runtime-verified to return `application/problem+json` for missing mock recalls.
+- `MockRecallDetail` success response shape exists in OpenAPI and generated types only.
+- No database, auth, tenant model, RBAC, audit log, persisted traceability records, successful mock-recall runtime payloads, CSV generation, imports, exports, or production workflow implementation exists yet.
+
+## Setup and Checks
 
 ```powershell
-npm install
-npm run dev
+npm ci
+npm run api:lint
+npm run api:types:check
 npm run typecheck
 npm run build
 ```
-
-## Current Status
-
-This is a baseline-only scaffold. It has no database, authentication, FSMA runtime workflows, imports, exports, tenant model, RBAC model, or audit log implementation.
-
-## Next Batch
-
-Add `.gitignore` and `api/openapi.yaml` before dependency install, database work, authentication, or product code.

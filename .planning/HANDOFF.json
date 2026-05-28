@@ -1,119 +1,134 @@
 {
-  "version": "1.0",
-  "timestamp": "2026-05-27T20:02:12.9174677-04:00",
+  "version": "1.1",
+  "timestamp": "2026-05-28T12:57:51.3257515-04:00",
   "phase": null,
   "phase_name": "default",
   "phase_dir": ".planning",
-  "plan": null,
-  "task": null,
-  "total_tasks": null,
-  "status": "paused",
-  "completed_tasks": [
+  "status": "paused_ready_for_consultant_review",
+  "repo": {
+    "path": "C:\\Users\\matth\\Desktop\\FSMA 204 Workflow Product",
+    "branch": "main",
+    "remote": "https://github.com/mmtuentertainment/FSMA-204-Traceability-Workflow.git",
+    "verified_pre_batch_10_head": "470589f Add baseline scaffold plan"
+  },
+  "product_boundaries": [
+    "Readiness workflow only; no compliance certification.",
+    "Human review remains explicit.",
+    "FDA-style sortable export language is allowed, but no FDA endorsement.",
+    "No legal advice or automated exemption determination."
+  ],
+  "completed_batches": [
     {
-      "id": 1,
-      "name": "Batch 0/1/1B baseline scaffold and OpenAPI contract",
-      "status": "done",
+      "id": "0/1/1B",
+      "name": "Baseline scaffold and OpenAPI contract",
+      "status": "completed_committed",
       "commit": "01eeda3"
     },
     {
-      "id": 2,
-      "name": "Batch 2 dependency install and validation",
-      "status": "done",
+      "id": "2",
+      "name": "Dependency install and validation",
+      "status": "completed_committed",
       "commit": "c9e93be"
     },
     {
-      "id": 3,
-      "name": "Batch 2A Next tsconfig normalization",
-      "status": "done",
+      "id": "2A",
+      "name": "Next tsconfig normalization",
+      "status": "completed_committed",
       "commit": "11c36ca"
     },
     {
-      "id": 4,
-      "name": "Batch 3 OpenAPI validation and generated TypeScript contract types",
-      "status": "done_uncommitted",
-      "progress": "Added API lint/type scripts, installed @redocly/cli and openapi-typescript, generated lib/api/generated/openapi-types.ts, and passed api:lint, api:types, api:types:check, typecheck, and build."
-    }
-  ],
-  "remaining_tasks": [
-    {
-      "id": 5,
-      "name": "Consultant review of Batch 3 result",
-      "status": "pending_human"
+      "id": "3",
+      "name": "OpenAPI validation and generated TypeScript contract types",
+      "status": "completed_committed",
+      "commit": "ff54a0f"
     },
     {
-      "id": 6,
-      "name": "Commit Batch 3 if consultant passes it",
+      "id": "4",
+      "name": "OpenAPI license metadata",
+      "status": "completed_committed",
+      "commit": "f2f54ca"
+    },
+    {
+      "id": "5",
+      "name": "OpenAPI contract guardrail audit",
+      "status": "completed_committed",
+      "commit": "d3e12e4"
+    },
+    {
+      "id": "6",
+      "name": "OpenAPI not-found responses",
+      "status": "completed_committed",
+      "commit": "6c8aa8a"
+    },
+    {
+      "id": "7",
+      "name": "First mock recall Problem Details handlers",
+      "status": "completed_committed",
+      "commit": "3120a69"
+    },
+    {
+      "id": "8",
+      "name": "Runtime verification of mock recall Problem Details handlers",
+      "status": "completed_committed",
+      "commit": "5500f33"
+    },
+    {
+      "id": "9",
+      "name": "OpenAPI-only MockRecallDetail success shape",
+      "status": "completed_committed",
+      "commit": "cb587d3"
+    }
+  ],
+  "current_state": {
+    "summary": "Paused and ready for consultant review of the next micro-batch after synchronizing project truth surfaces to the post-Batch-9 repo state.",
+    "openapi_source_of_truth": "api/openapi.yaml",
+    "generated_contract_types": "lib/api/generated/openapi-types.ts",
+    "mock_recall_not_found_handlers": "Runtime verified in Batch 8.",
+    "mock_recall_detail_success_shape": "Contract-only in Batch 9; no successful runtime/storage flow exists yet.",
+    "known_untracked_files": [],
+    "tracked_context_files": [
+      {
+        "path": "PLAN.md",
+        "note": "Tracked by commit 470589f before Batch 10; Batch 10 does not edit or stage it."
+      }
+    ],
+    "ignored_artifacts_seen": [
+      ".next/",
+      "next-env.d.ts",
+      "node_modules/",
+      "tsconfig.tsbuildinfo"
+    ]
+  },
+  "remaining_absences": [
+    "No database.",
+    "No authentication.",
+    "No tenant model.",
+    "No RBAC.",
+    "No audit log.",
+    "No persisted traceability records.",
+    "No successful mock-recall runtime payloads.",
+    "No CSV generation.",
+    "No imports or exports.",
+    "No production workflow implementation."
+  ],
+  "next_recommended_options": [
+    {
+      "option": "Add a contract-only OpenAPI example for MockRecallDetail.",
       "status": "not_started"
     },
     {
-      "id": 7,
-      "name": "Next approved micro-batch: OpenAPI contract-quality cleanup for Redocly info.license warning, if approved",
+      "option": "Add a CI contract gate for existing OpenAPI lint/type checks.",
       "status": "not_started"
     }
   ],
   "blockers": [],
   "human_actions_pending": [
     {
-      "action": "Paste the Batch 3 result back to the consultant and wait for pass/commit guidance.",
-      "context": "Batch 3 is validated but uncommitted. The only OpenAPI lint issue is a Redocly warning that info should contain a license field; api/openapi.yaml was intentionally not changed in Batch 3.",
-      "blocking": true
+      "action": "Review the synchronized truth surfaces and approve the next narrow micro-batch.",
+      "blocking": false
     }
   ],
-  "decisions": [
-    {
-      "decision": "Keep OpenAPI as the source of truth before writing route handlers.",
-      "rationale": "Batch 3 added linting and generated TypeScript contract types only.",
-      "phase": null
-    },
-    {
-      "decision": "Do not import generated types into app code yet.",
-      "rationale": "Imports, route handlers, DB/auth code, UI product features, exports, and runtime traceability logic were explicitly out of scope for Batch 3.",
-      "phase": null
-    },
-    {
-      "decision": "Do not modify api/openapi.yaml for the Redocly info-license warning in Batch 3.",
-      "rationale": "The prompt required stopping before contract changes; lint passed with a warning, so the warning was documented for a future approved contract-quality batch.",
-      "phase": null
-    },
-    {
-      "decision": "Use npm peer-resolution compatibility mode for the approved tooling install.",
-      "rationale": "The first install failed because openapi-typescript@7.13.0 declares a TypeScript ^5.x peer while this project currently uses TypeScript ^6.0.3; the retry installed only the approved dev dependencies without downgrading TypeScript.",
-      "phase": null
-    }
-  ],
-  "uncommitted_files": [
-    {
-      "path": "package.json",
-      "status": "modified",
-      "note": "Batch 3 scripts and approved devDependencies."
-    },
-    {
-      "path": "package-lock.json",
-      "status": "modified",
-      "note": "Lockfile update from installing @redocly/cli and openapi-typescript."
-    },
-    {
-      "path": "lib/api/generated/openapi-types.ts",
-      "status": "untracked",
-      "note": "Generated by openapi-typescript from api/openapi.yaml; intended to be tracked."
-    },
-    {
-      "path": "ops/deltas/0003-openapi-tooling.md",
-      "status": "untracked",
-      "note": "Batch 3 evidence and validation record."
-    },
-    {
-      "path": "PLAN.md",
-      "status": "untracked",
-      "note": "Intentionally left untracked per consultant instruction."
-    }
-  ],
-  "ignored_artifacts": [
-    "node_modules/",
-    ".next/",
-    "next-env.d.ts",
-    "tsconfig.tsbuildinfo"
-  ],
-  "next_action": "Paste the Batch 3 result back to the consultant. If it passes, commit package.json, package-lock.json, lib/api/generated/openapi-types.ts, and ops/deltas/0003-openapi-tooling.md with a Batch 3 commit message, leaving PLAN.md untracked.",
-  "context_notes": "No formal GSD phase directory exists, so this handoff uses .planning/. Batch 2A is committed at 11c36ca. Batch 3 is complete and validated but intentionally uncommitted pending consultant review. Do not add DB, auth, handlers, route handlers, UI product features, imports, exports, tests, migrations, data models, or runtime traceability logic without a new approved prompt."
+  "critical_do_not_expand_without_approval": [
+    "Database, storage, auth, RBAC, middleware, audit log, route-handler behavior, generated types, package files, tests, fixtures, imports, exports, CSV generation, UI, supplier portal, OCR, ERP integration, and runtime traceability logic."
+  ]
 }

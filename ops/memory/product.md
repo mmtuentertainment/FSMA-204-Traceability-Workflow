@@ -1,6 +1,9 @@
 # Product Memory
 
 - FSMA 204 readiness workflow, not compliance certification.
-- First product slice should center human-reviewed KDE/CTE records and FDA-style sortable export.
-- Batch 0 is scaffold only: no DB, auth, imports, exports, or runtime workflows.
-- Next batch should add `.gitignore` and `api/openapi.yaml`.
+- First wedge remains fresh-cut produce mock recall readiness.
+- OpenAPI-first contract and generated TypeScript contract tooling exist.
+- Mock-recall Problem Details not-found handlers are runtime verified.
+- `MockRecallDetail` is contract-only; no successful runtime/storage flow exists yet.
+- `PLAN.md` is tracked in the current HEAD; do not edit it unless explicitly approved.
+- Next useful batch should be small, reversible, and consultant-approved.
