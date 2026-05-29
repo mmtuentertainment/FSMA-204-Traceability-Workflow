@@ -42,23 +42,62 @@ function delay(ms) {
   });
 }
 
+function formatServerOutput() {
+  return serverOutput.trim() || "(no server output captured)";
+}
+
+function truncateText(value, maxLength = 1000) {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  return `${value.slice(0, maxLength)}... [truncated ${
+    value.length - maxLength
+  } chars]`;
+}
+
+function formatResponseContext({ url, response, bodyText }) {
+  return [
+    `URL: ${url}`,
+    `Status: ${response.status} ${response.statusText}`,
+    `Content-Type: ${response.headers.get("content-type") ?? "(missing)"}`,
+    `Body: ${truncateText(JSON.stringify(bodyText))}`,
+  ].join("\n");
+}
+
 async function waitForServer() {
   const probePath = `/api/traceability/mock-recalls/${missingId}`;
+  const probeUrl = `${baseUrl}${probePath}`;
+  let lastProbeError;
 
   for (let attempt = 0; attempt < 60; attempt += 1) {
     if (server.exitCode !== null) {
-      throw new Error(`Next server exited early.\n${serverOutput}`);
+      throw new Error(
+        [
+          `Next server exited early with code ${server.exitCode} while waiting for ${probeUrl}.`,
+          "Server output:",
+          formatServerOutput(),
+        ].join("\n"),
+      );
     }
 
     try {
-      await fetch(`${baseUrl}${probePath}`);
+      await fetch(probeUrl);
       return;
-    } catch {
+    } catch (error) {
+      lastProbeError = error;
       await delay(500);
     }
   }
 
-  throw new Error(`Timed out waiting for Next server.\n${serverOutput}`);
+  throw new Error(
+    [
+      `Timed out waiting for Next server at ${probeUrl}.`,
+      `Last probe error: ${lastProbeError?.message ?? "(none)"}`,
+      "Server output:",
+      formatServerOutput(),
+    ].join("\n"),
+  );
 }
 
 async function stopServer() {
@@ -83,64 +122,163 @@ async function stopServer() {
 }
 
 async function fetchJson(pathname) {
-  const response = await fetch(`${baseUrl}${pathname}`);
+  const url = `${baseUrl}${pathname}`;
+  const response = await fetch(url);
   const bodyText = await response.text();
 
-  return {
-    response,
-    body: JSON.parse(bodyText),
-  };
+  try {
+    return {
+      url,
+      response,
+      bodyText,
+      body: JSON.parse(bodyText),
+    };
+  } catch (error) {
+    throw new Error(
+      [
+        `Expected JSON response for ${pathname}.`,
+        formatResponseContext({ url, response, bodyText }),
+        `Parse error: ${error.message}`,
+      ].join("\n"),
+    );
+  }
 }
 
-function assertProblemDetails({ response, body }, pathname, mockRecallId) {
-  assert.equal(response.status, 404);
+function assertProblemDetails(result, pathname, mockRecallId) {
+  const { response, body } = result;
+  const context = formatResponseContext(result);
+
+  assert.equal(
+    response.status,
+    404,
+    `Expected 404 for ${pathname}.\n${context}`,
+  );
   assert.match(
     response.headers.get("content-type") ?? "",
     /application\/problem\+json/,
+    `Expected Problem Details content type for ${pathname}.\n${context}`,
   );
-  assert.equal(body.type, "about:blank");
-  assert.equal(body.title, "Resource not found");
-  assert.equal(body.status, 404);
   assert.equal(
-    body.detail,
-    `No mock recall was found for mockRecallId "${mockRecallId}".`,
+    body?.type,
+    "about:blank",
+    `Unexpected problem type for ${pathname}.\n${context}`,
   );
-  assert.equal(body.instance, pathname);
+  assert.equal(
+    body?.title,
+    "Resource not found",
+    `Unexpected problem title for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    body?.status,
+    404,
+    `Unexpected problem status for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    body?.detail,
+    `No mock recall was found for mockRecallId "${mockRecallId}".`,
+    `Unexpected problem detail for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    body?.instance,
+    pathname,
+    `Unexpected problem instance for ${pathname}.\n${context}`,
+  );
 }
 
 async function assertFixtureDetail() {
   const pathname = `/api/traceability/mock-recalls/${fixtureId}`;
-  const { response, body } = await fetchJson(pathname);
+  const result = await fetchJson(pathname);
+  const { response, body } = result;
+  const context = formatResponseContext(result);
 
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /application\/json/);
-  assert.equal(body.mockRecallId, fixtureId);
-  assert.equal(body.status, "ready_for_human_review");
-  assert.equal(body.scope.traceabilityLotCode, "TLC-FC-2026-05-READY");
-  assert.equal(body.readinessSummary.humanReviewRequired, true);
-  assert.deepEqual(body.readinessSummary.humanReviewReasons, [
-    "supplier_kde_gap",
-    "lot_code_ambiguity",
-  ]);
-  assert.equal(body.packet.csvAvailable, true);
-  assert.equal(body.packet.csvHref, `${pathname}/packet.csv`);
-  assert.equal(body.packet.format, "fda_style_sortable_csv");
+  assert.equal(
+    response.status,
+    200,
+    `Expected fixture detail 200 for ${pathname}.\n${context}`,
+  );
+  assert.match(
+    response.headers.get("content-type") ?? "",
+    /application\/json/,
+    `Expected fixture detail JSON content type for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    body?.mockRecallId,
+    fixtureId,
+    `Unexpected fixture mockRecallId for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    body?.status,
+    "ready_for_human_review",
+    `Unexpected fixture status for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    body?.scope?.traceabilityLotCode,
+    "TLC-FC-2026-05-READY",
+    `Unexpected fixture traceability lot for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    body?.readinessSummary?.humanReviewRequired,
+    true,
+    `Unexpected fixture human-review flag for ${pathname}.\n${context}`,
+  );
+  assert.deepEqual(
+    body?.readinessSummary?.humanReviewReasons,
+    ["supplier_kde_gap", "lot_code_ambiguity"],
+    `Unexpected fixture human-review reasons for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    body?.packet?.csvAvailable,
+    true,
+    `Unexpected fixture packet availability for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    body?.packet?.csvHref,
+    `${pathname}/packet.csv`,
+    `Unexpected fixture packet href for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    body?.packet?.format,
+    "fda_style_sortable_csv",
+    `Unexpected fixture packet format for ${pathname}.\n${context}`,
+  );
 }
 
 async function assertFixturePacketCsv() {
-  const response = await fetch(
-    `${baseUrl}/api/traceability/mock-recalls/${fixtureId}/packet.csv`,
-  );
+  const pathname = `/api/traceability/mock-recalls/${fixtureId}/packet.csv`;
+  const url = `${baseUrl}${pathname}`;
+  const response = await fetch(url);
   const bodyText = await response.text();
+  const context = formatResponseContext({ url, response, bodyText });
 
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /text\/csv/);
-  assert.equal(bodyText, expectedPacketCsv);
-  assert.equal(bodyText.split("\r\n")[0], expectedPacketCsvHeader);
-  assert.equal(bodyText.split("\r\n")[1], expectedPacketCsvRow);
+  assert.equal(
+    response.status,
+    200,
+    `Expected packet CSV 200 for ${pathname}.\n${context}`,
+  );
+  assert.match(
+    response.headers.get("content-type") ?? "",
+    /text\/csv/,
+    `Expected packet CSV content type for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    bodyText,
+    expectedPacketCsv,
+    `Unexpected packet CSV body for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    bodyText.split("\r\n")[0],
+    expectedPacketCsvHeader,
+    `Unexpected packet CSV header for ${pathname}.\n${context}`,
+  );
+  assert.equal(
+    bodyText.split("\r\n")[1],
+    expectedPacketCsvRow,
+    `Unexpected packet CSV fixture row for ${pathname}.\n${context}`,
+  );
   assert.doesNotMatch(
     bodyText,
     /compliance certification|legal advice|FDA endorsement/i,
+    `Packet CSV includes disallowed compliance language for ${pathname}.\n${context}`,
   );
 }
 
