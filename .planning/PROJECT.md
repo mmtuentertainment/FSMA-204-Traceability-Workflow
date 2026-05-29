@@ -16,12 +16,12 @@ A reviewer can assemble a trustworthy, human-reviewed mock recall readiness pack
 - [done] `api/openapi.yaml` defines the contract-first traceability API.
 - [done] `lib/api/generated/openapi-types.ts` is generated from the OpenAPI contract.
 - [done] Mock recall detail and packet routes return typed `application/problem+json` not-found responses for missing resources.
+- [done] GitHub Actions contract gate runs npm install, OpenAPI freshness, typecheck, build, and MockRecall smoke checks on push and pull request events.
 - [done] Batch deltas document the current scaffold, OpenAPI, generated-type, runtime-verification, and truth-surface state.
 
 ### Active
 
 - [ ] Keep contract, generated types, README, product memory, and delta reports synchronized.
-- [ ] Add CI or equivalent repeatable contract gates for OpenAPI linting, generated-type freshness, TypeScript, and build checks.
 - [ ] Add contract examples for `MockRecallDetail` and future CSV packet behavior before broad runtime implementation.
 - [ ] Implement traceability lots, CTE records, supplier KDE requests, exceptions, human review, mock recall summary, and FDA-style sortable CSV export in approved micro-batches.
 - [ ] Preserve tenant isolation, RBAC, idempotency, and append-only auditability before production data workflows.
@@ -43,7 +43,7 @@ A reviewer can assemble a trustworthy, human-reviewed mock recall readiness pack
 - OpenAPI source of truth: `api/openapi.yaml`.
 - Generated contract types: `lib/api/generated/openapi-types.ts`.
 - Shared Problem Details helper: `lib/api/problem.ts`.
-- Current runtime API behavior is intentionally narrow: two mock-recall routes return not-found Problem Details.
+- Current runtime API behavior is intentionally narrow: two mock-recall routes expose one contract fixture for smoke checks and return not-found Problem Details for missing resources.
 - FDA research checked on 2026-05-28 says FDA intends not to enforce the Food Traceability Rule before July 20, 2028, following the 2026 appropriations directive; recheck official FDA sources before date-specific claims.
 - FDA's electronic sortable spreadsheet template is illustrative, not a required exact template.
 
@@ -54,7 +54,7 @@ A reviewer can assemble a trustworthy, human-reviewed mock recall readiness pack
 - **Contract first**: OpenAPI changes precede database, auth, or runtime workflow expansion.
 - **Generated files**: Do not hand-edit `lib/api/generated/openapi-types.ts`.
 - **Artifact hygiene**: Do not commit `.next/`, `node_modules/`, `next-env.d.ts`, `.env*.local`, or `*.tsbuildinfo`.
-- **Runtime absences**: No database, auth, tenant model, RBAC, audit log, persisted traceability records, imports, exports, successful mock recall payloads, or CSV generation exist yet.
+- **Runtime absences**: No database, auth, tenant model, RBAC, audit log, persisted traceability records, imports, exports, storage-backed mock recall payloads, or production CSV generation exist yet.
 - **Tooling**: If future work asks about library/framework/API usage, use the repo's Context7 CLI rule first.
 
 ## Key Decisions

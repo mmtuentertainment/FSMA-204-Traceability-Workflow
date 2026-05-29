@@ -13,12 +13,13 @@ focus: quality
 - `npm run api:check` combines OpenAPI lint and type freshness checks.
 - `npm run typecheck` runs TypeScript without emitting files.
 - `npm run build` performs a production Next build.
+- `.github/workflows/contract-gate.yml` runs `npm ci`, `npm run api:check`, `npm run typecheck`, `npm run build`, and `npm run test:mock-recall:contract` on push and pull request events.
 
 ## Test Files
 
-- No unit test, integration test, or end-to-end test files are present in the repository.
+- `tests/mock-recall-contract-smoke.mjs` verifies the current MockRecall contract fixture and missing-resource Problem Details behavior against a production Next server.
 - No test runner such as Vitest, Jest, Playwright, or Cypress is configured in `package.json`.
-- Runtime verification has been captured in operational delta reports instead of committed test files.
+- Earlier runtime verification is captured in operational delta reports; current MockRecall fixture and not-found behavior are also protected by the committed smoke check.
 
 ## Verified Runtime Behavior
 
@@ -33,14 +34,14 @@ focus: quality
 
 ## Testing Gaps
 
-- The not-found route behavior is verified by a delta report but not protected by a committed regression test.
-- No CI workflow exists to run `npm run api:check`, `npm run typecheck`, or `npm run build`.
+- The not-found route behavior is protected by the MockRecall contract smoke check.
+- No broad unit, integration, or end-to-end test framework is configured.
 - No tests cover `lib/api/problem.ts` directly.
-- No positive runtime path exists yet for `MockRecallDetail` or CSV packet generation.
+- No storage-backed or production positive runtime path exists yet for `MockRecallDetail` or CSV packet generation.
 
 ## Recommended Next Testing Steps
 
-- Add a CI contract gate for `npm run api:check`, `npm run typecheck`, and possibly `npm run build`.
+- Keep the CI contract gate aligned with existing package scripts as contract checks evolve.
 - Add focused route-handler tests only when the repo explicitly approves a test framework.
 - Keep runtime success tests deferred until storage or a deliberate fixture strategy exists.
 - Continue documenting verification commands in `ops/deltas/` for every micro-batch.

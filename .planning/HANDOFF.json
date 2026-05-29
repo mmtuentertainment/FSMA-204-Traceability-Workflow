@@ -1,10 +1,10 @@
 {
   "version": "1.1",
-  "timestamp": "2026-05-28T17:55:00-04:00",
+  "timestamp": "2026-05-29T00:00:00-04:00",
   "phase": 1,
   "phase_name": "Contract Gate And Examples",
   "phase_dir": ".planning/phases/01-contract-gate-and-examples",
-  "status": "project_initialized_ready_for_phase_1_discussion",
+  "status": "truth_surfaces_synced_ci_gate_and_mock_recall_smoke_exist",
   "repo": {
     "path": "C:\\Users\\matth\\Desktop\\FSMA 204 Workflow Product",
     "branch": "main",
@@ -29,11 +29,13 @@
     "repo_instructions": "AGENTS.md"
   },
   "current_state": {
-    "summary": "GSD project initialization is underway/complete and the next safe workflow step is Phase 1 discussion.",
+    "summary": "GSD project initialization is complete. The CI contract gate and MockRecall contract smoke check already exist; remaining safe work should build on them without duplicating the workflow or smoke harness.",
     "openapi_source_of_truth": "api/openapi.yaml",
     "generated_contract_types": "lib/api/generated/openapi-types.ts",
-    "mock_recall_not_found_handlers": "Runtime verified in Batch 8 and mapped in .planning/codebase.",
-    "mock_recall_detail_success_shape": "Contract-only in Batch 9; no successful runtime/storage flow exists yet.",
+    "ci_contract_gate": ".github/workflows/contract-gate.yml runs npm ci, npm run api:check, npm run typecheck, npm run build, and npm run test:mock-recall:contract on push and pull request events.",
+    "mock_recall_contract_smoke": "tests/mock-recall-contract-smoke.mjs verifies the current contract fixture and missing-resource Problem Details behavior against a production Next server.",
+    "mock_recall_not_found_handlers": "Runtime verified in Batch 8 and protected by the committed MockRecall contract smoke check.",
+    "mock_recall_detail_success_shape": "One contract fixture exists for runtime smoke checks; no persisted or storage-backed success flow exists yet.",
     "phase_1_goal": "Maintainers can validate the API contract repeatably and review concrete MockRecallDetail/packet examples before runtime expansion."
   },
   "remaining_absences": [
@@ -43,19 +45,19 @@
     "No RBAC.",
     "No audit log.",
     "No persisted traceability records.",
-    "No successful mock-recall runtime payloads.",
-    "No CSV generation.",
-    "No imports or exports.",
+    "No persisted or storage-backed mock-recall runtime payloads beyond the contract smoke fixture.",
+    "No production CSV generation.",
+    "No imports or production exports.",
     "No production workflow implementation."
   ],
   "next_recommended_actions": [
     {
-      "action": "Run /gsd discuss-phase 1.",
+      "action": "Complete remaining Phase 1 contract examples and truth-surface synchronization using the existing CI gate and MockRecall smoke check as baseline evidence.",
       "status": "ready"
     },
     {
-      "action": "Then run /gsd plan-phase 1 after discussion context exists.",
-      "status": "not_started"
+      "action": "Do not duplicate .github/workflows/contract-gate.yml or add another smoke harness unless a direct contradiction or approved batch requires it.",
+      "status": "ready"
     }
   ],
   "blockers": [],

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The roadmap starts from the existing scaffold, OpenAPI contract, generated types, and mock-recall Problem Details handlers. It moves forward in small, reviewable phases: first protecting the contract with examples and CI, then adding runtime behavior, persistence/security foundations, traceability workflow slices, supplier KDE tracking, mock recall readiness summaries, and FDA-style sortable CSV export. Each phase must preserve conservative FSMA language and explicit human review.
+The roadmap starts from the existing scaffold, OpenAPI contract, generated types, CI contract gate, committed MockRecall contract smoke check, and mock-recall Problem Details handlers. It moves forward in small, reviewable phases: first protecting the contract with examples and CI, then adding runtime behavior, persistence/security foundations, traceability workflow slices, supplier KDE tracking, mock recall readiness summaries, and FDA-style sortable CSV export. Each phase must preserve conservative FSMA language and explicit human review.
 
 ## Phases
 
@@ -32,13 +32,13 @@ The roadmap starts from the existing scaffold, OpenAPI contract, generated types
 **Success Criteria** (what must be TRUE):
   1. Maintainer can run one documented command for OpenAPI lint and generated-type freshness.
   2. Contract examples for `MockRecallDetail` and CSV packet behavior validate against `api/openapi.yaml`.
-  3. README, product memory, and delta report state exactly what is contract-only versus runtime behavior.
+  3. README, product memory, and delta report distinguish contract scope from runtime behavior.
   4. No database, auth, route success behavior, imports, exports, or UI expansion is added in this phase.
 **Plans**: 3 plans
 
 Plans:
 - [ ] 01-01: Add contract examples for mock recall detail and packet states.
-- [ ] 01-02: Add repeatable contract gate script or CI workflow.
+- [done] 01-02: Add repeatable contract gate script or CI workflow.
 - [ ] 01-03: Sync truth surfaces and delta evidence.
 
 ### Phase 2: Problem Details Test Harness
@@ -55,7 +55,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: Choose and add the smallest route verification approach.
+- [done] 02-01: Add the smallest route verification approach for the current MockRecall contract fixture and not-found behavior.
 - [ ] 02-02: Document verification scope and skipped runtime expansion.
 
 ### Phase 3: Security And Persistence Foundation
@@ -174,8 +174,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Contract Gate And Examples | 0/3 | Not started | - |
-| 2. Problem Details Test Harness | 0/2 | Not started | - |
+| 1. Contract Gate And Examples | 1/3 | In progress | - |
+| 2. Problem Details Test Harness | 1/2 | In progress | - |
 | 3. Security And Persistence Foundation | 0/4 | Not started | - |
 | 4. Traceability Lot And Event Records | 0/3 | Not started | - |
 | 5. Human Review Exceptions | 0/3 | Not started | - |

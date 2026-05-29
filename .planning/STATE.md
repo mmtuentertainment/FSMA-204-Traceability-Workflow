@@ -14,8 +14,8 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 - Remote: `https://github.com/mmtuentertainment/FSMA-204-Traceability-Workflow.git`.
 - OpenAPI source of truth: `api/openapi.yaml`.
 - Generated types: `lib/api/generated/openapi-types.ts`.
-- Runtime implemented today: mock recall detail and packet routes return not-found Problem Details for missing resources.
-- Current absences: database, auth, tenant model, RBAC, audit log, persisted traceability records, imports, exports, successful mock recall payloads, CSV generation, and production workflow logic.
+- Runtime implemented today: mock recall detail and packet routes expose one contract fixture for smoke checks and return not-found Problem Details for missing resources.
+- Current absences: database, auth, tenant model, RBAC, audit log, persisted traceability records, imports, exports, storage-backed mock recall payloads, production CSV generation, and production workflow logic.
 
 ## Planning Artifacts
 
@@ -31,13 +31,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 
 - Keep FSMA language conservative: readiness workflow, human review, and FDA-style sortable export only.
 - Keep OpenAPI first and generated types checked.
+- The CI contract gate and committed MockRecall contract smoke check already exist; future batches should use them as the baseline rather than duplicate them.
 - Keep future work in small approved batches with `ops/deltas/` evidence.
 - Use GSD `interactive` mode with Codex text-mode and no auto-advance.
 - Start with Phase 1 rather than jumping directly into database, auth, CSV, or UI work.
 
 ## Next Step
 
-Run `/gsd discuss-phase 1` to gather implementation context for Contract Gate And Examples, then plan Phase 1 before editing contract or CI files.
+Continue the remaining Phase 1 work with contract examples and truth-surface synchronization, using the existing CI contract gate and MockRecall contract smoke check as baseline evidence.
 
 ## Guardrails
 

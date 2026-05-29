@@ -10,18 +10,20 @@
 
 - Use conservative FSMA language: readiness workflow, human review, and FDA-style sortable export.
 - Do not claim compliance certification, legal advice, or FDA endorsement.
-- Batch 0 is scaffold only: no product features, no database, no authentication, no imports, no exports, and no runtime workflow logic.
+- Current posture is an OpenAPI-first scaffold with generated contract checks, a CI contract gate, and one MockRecall contract smoke fixture.
+- No persistence, authentication, tenant model, RBAC, audit log, imports, exports, production CSV generation, or production workflow logic exists yet.
 
 ## Batch Discipline
 
 - Keep work in small approved batches and document each batch in `ops/deltas/`.
+- Use the existing local/CI gate as the baseline: `npm ci`, `npm run api:check`, `npm run typecheck`, `npm run build`, and `npm run test:mock-recall:contract`.
 - Do not install dependencies or create generated artifacts unless the batch explicitly permits it.
 - Do not leave `.next/`, `node_modules/`, `next-env.d.ts`, lockfiles, or other generated outputs in the working tree without an approved `.gitignore` plan.
 - Before edits, verify the repository path, `git status --short`, `git remote -v`, `node -v`, and `npm -v`; Node.js must be >= 20.9.
 
 ## Future API Guardrails
 
-- Add the OpenAPI contract before database, auth, or product implementation.
+- Keep OpenAPI as the source of truth before database, auth, or product implementation.
 - Use RFC 9457 Problem Details for API errors.
 - Design mutating writes with idempotency keys.
 - Preserve tenant isolation, RBAC checks, and append-only auditability in future batches.

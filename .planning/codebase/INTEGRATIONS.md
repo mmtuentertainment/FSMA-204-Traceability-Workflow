@@ -22,10 +22,10 @@ focus: tech
 
 ## Runtime Routes
 
-- `app/api/traceability/mock-recalls/[mockRecallId]/route.ts` implements `GET /api/traceability/mock-recalls/{mockRecallId}` as a not-found Problem Details response.
-- `app/api/traceability/mock-recalls/[mockRecallId]/packet.csv/route.ts` implements `GET /api/traceability/mock-recalls/{mockRecallId}/packet.csv` as a not-found Problem Details response.
+- `app/api/traceability/mock-recalls/[mockRecallId]/route.ts` implements `GET /api/traceability/mock-recalls/{mockRecallId}` for one contract fixture and not-found Problem Details for missing resources.
+- `app/api/traceability/mock-recalls/[mockRecallId]/packet.csv/route.ts` implements `GET /api/traceability/mock-recalls/{mockRecallId}/packet.csv` for one contract fixture and not-found Problem Details for missing resources.
 - Both routes call `mockRecallNotFoundResponse()` from `lib/api/problem.ts`.
-- No successful mock recall detail payload or CSV generation exists at runtime.
+- No persisted or storage-backed mock recall detail payload or production CSV generation exists at runtime.
 
 ## Contracted But Not Implemented
 
@@ -34,7 +34,7 @@ focus: tech
 - Human-review exceptions are contracted at `/api/traceability/exceptions` and `/api/traceability/exceptions/{exceptionId}`.
 - Supplier KDE requests are contracted at `/api/traceability/supplier-requests` and `/api/traceability/supplier-requests/{supplierRequestId}`.
 - Mock recall creation is contracted at `/api/traceability/mock-recalls`.
-- Mock recall detail and packet download are partially implemented only for missing-resource Problem Details.
+- Mock recall detail and packet download are partially implemented for the contract fixture and missing-resource Problem Details.
 
 ## Integration Guardrails
 

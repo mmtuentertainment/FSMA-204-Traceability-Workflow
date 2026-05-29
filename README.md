@@ -21,8 +21,10 @@ Conservative FSMA 204 traceability readiness workflow. This product should help 
 
 ```powershell
 npm ci
-npm run api:lint
-npm run api:types:check
+npm run api:check
 npm run typecheck
 npm run build
+npm run test:mock-recall:contract
 ```
+
+`npm run api:check` wraps the component contract commands `npm run api:lint` and `npm run api:types:check`.

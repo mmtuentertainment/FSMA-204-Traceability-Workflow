@@ -15,14 +15,14 @@ focus: concerns
 ## Contract Runtime Gap
 
 - `api/openapi.yaml` defines many endpoints that do not exist at runtime.
-- `MockRecallDetail` exists in OpenAPI and generated types, but runtime handlers still return not-found Problem Details for all IDs.
-- The CSV endpoint is contracted for future `text/csv` success output, but no CSV generation exists.
+- `MockRecallDetail` exists in OpenAPI and generated types, and one contract fixture exists for runtime smoke checks, but no persisted or storage-backed success flow exists.
+- The CSV endpoint has one fixture output for the contract smoke check, but no production CSV generation workflow exists.
 
 ## Testing Gap
 
-- There is no committed test suite.
-- Runtime evidence currently lives in `ops/deltas/0008-runtime-verify-mock-recall-problem-handlers.md`.
-- A CI contract gate is a natural next batch because package scripts already exist.
+- There is one committed MockRecall contract smoke check.
+- Runtime evidence lives in `ops/deltas/0008-runtime-verify-mock-recall-problem-handlers.md` and the committed MockRecall contract smoke check.
+- Broader unit, integration, and end-to-end test coverage is still absent.
 
 ## Generated File Risk
 
@@ -40,6 +40,6 @@ focus: concerns
 ## Operational Concerns
 
 - `.planning/HANDOFF.json` says the next work should be consultant-approved and micro-batch sized.
-- Current recommended next options are contract-only `MockRecallDetail` examples or CI contract gates.
+- Current recommended next options should build on the existing contract examples, CI gate, and MockRecall smoke coverage.
 - `PLAN.md` is tracked and should not be edited unless explicitly approved.
 - No remote push should be assumed from local commits unless requested.
