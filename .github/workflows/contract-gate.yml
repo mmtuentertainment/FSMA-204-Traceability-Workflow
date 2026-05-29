@@ -33,3 +33,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Check MockRecall contract smoke
+        run: npm run test:mock-recall:contract
