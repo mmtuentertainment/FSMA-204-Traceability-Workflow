@@ -6,6 +6,15 @@ const missingId = "contract-smoke-missing";
 const host = "127.0.0.1";
 const port = Number(process.env.MOCK_RECALL_SMOKE_PORT ?? 3227);
 const baseUrl = `http://${host}:${port}`;
+const expectedPacketCsvHeader =
+  "mock_recall_id,traceability_lot_code,product_description,human_review_required,readiness_status";
+const expectedPacketCsvRow =
+  "contract-fixture-ready-for-review,TLC-FC-2026-05-READY,Fresh-cut melon cup,true,ready_for_human_review";
+const expectedPacketCsv = [
+  expectedPacketCsvHeader,
+  expectedPacketCsvRow,
+  "",
+].join("\r\n");
 
 const server = spawn(
   process.execPath,
@@ -126,11 +135,9 @@ async function assertFixturePacketCsv() {
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /text\/csv/);
-  assert.match(
-    bodyText,
-    /mock_recall_id,traceability_lot_code,product_description,human_review_required,readiness_status/,
-  );
-  assert.match(bodyText, new RegExp(fixtureId));
+  assert.equal(bodyText, expectedPacketCsv);
+  assert.equal(bodyText.split("\r\n")[0], expectedPacketCsvHeader);
+  assert.equal(bodyText.split("\r\n")[1], expectedPacketCsvRow);
   assert.doesNotMatch(
     bodyText,
     /compliance certification|legal advice|FDA endorsement/i,
