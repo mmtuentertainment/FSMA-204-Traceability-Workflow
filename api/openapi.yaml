@@ -165,7 +165,20 @@ paths:
                     updatedAt: "2026-05-28T00:00:00Z"
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
+        "404":
+          description: Resource not found.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+              examples:
+                missingMockRecallDetail:
+                  summary: Missing mock recall detail
+                  value:
+                    type: about:blank
+                    title: Resource not found
+                    status: 404
+                    detail: 'No mock recall was found for mockRecallId "contract-smoke-missing".'
+                    instance: /api/traceability/mock-recalls/contract-smoke-missing
         "429": { $ref: "#/components/responses/RateLimited" }
   /api/traceability/mock-recalls/{mockRecallId}/packet.csv:
     get:
@@ -186,7 +199,20 @@ paths:
                     contract-fixture-ready-for-review,TLC-FC-2026-05-READY,Fresh-cut melon cup,true,ready_for_human_review
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
+        "404":
+          description: Resource not found.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+              examples:
+                missingMockRecallPacket:
+                  summary: Missing mock recall packet CSV
+                  value:
+                    type: about:blank
+                    title: Resource not found
+                    status: 404
+                    detail: 'No mock recall was found for mockRecallId "contract-smoke-missing".'
+                    instance: /api/traceability/mock-recalls/contract-smoke-missing/packet.csv
         "429": { $ref: "#/components/responses/RateLimited" }
 components:
   securitySchemes:
