@@ -720,7 +720,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description CSV packet content; export generation is future work */
+            /** @description CSV packet content; production export generation is future work */
             200: {
                 headers: {
                     [name: string]: unknown;

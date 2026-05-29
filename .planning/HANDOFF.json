@@ -1,103 +1,40 @@
 {
   "version": "1.1",
-  "timestamp": "2026-05-28T12:57:51.3257515-04:00",
-  "phase": null,
-  "phase_name": "default",
-  "phase_dir": ".planning",
-  "status": "paused_ready_for_consultant_review",
+  "timestamp": "2026-05-28T17:55:00-04:00",
+  "phase": 1,
+  "phase_name": "Contract Gate And Examples",
+  "phase_dir": ".planning/phases/01-contract-gate-and-examples",
+  "status": "project_initialized_ready_for_phase_1_discussion",
   "repo": {
     "path": "C:\\Users\\matth\\Desktop\\FSMA 204 Workflow Product",
     "branch": "main",
     "remote": "https://github.com/mmtuentertainment/FSMA-204-Traceability-Workflow.git",
-    "verified_pre_batch_10_head": "470589f Add baseline scaffold plan"
+    "codebase_map_commit": "a8adeeb docs: map existing codebase"
   },
   "product_boundaries": [
     "Readiness workflow only; no compliance certification.",
     "Human review remains explicit.",
     "FDA-style sortable export language is allowed, but no FDA endorsement.",
-    "No legal advice or automated exemption determination."
+    "No legal advice or automated exemption determination.",
+    "Keep the product a lightweight traceability workflow layer, not ERP."
   ],
-  "completed_batches": [
-    {
-      "id": "0/1/1B",
-      "name": "Baseline scaffold and OpenAPI contract",
-      "status": "completed_committed",
-      "commit": "01eeda3"
-    },
-    {
-      "id": "2",
-      "name": "Dependency install and validation",
-      "status": "completed_committed",
-      "commit": "c9e93be"
-    },
-    {
-      "id": "2A",
-      "name": "Next tsconfig normalization",
-      "status": "completed_committed",
-      "commit": "11c36ca"
-    },
-    {
-      "id": "3",
-      "name": "OpenAPI validation and generated TypeScript contract types",
-      "status": "completed_committed",
-      "commit": "ff54a0f"
-    },
-    {
-      "id": "4",
-      "name": "OpenAPI license metadata",
-      "status": "completed_committed",
-      "commit": "f2f54ca"
-    },
-    {
-      "id": "5",
-      "name": "OpenAPI contract guardrail audit",
-      "status": "completed_committed",
-      "commit": "d3e12e4"
-    },
-    {
-      "id": "6",
-      "name": "OpenAPI not-found responses",
-      "status": "completed_committed",
-      "commit": "6c8aa8a"
-    },
-    {
-      "id": "7",
-      "name": "First mock recall Problem Details handlers",
-      "status": "completed_committed",
-      "commit": "3120a69"
-    },
-    {
-      "id": "8",
-      "name": "Runtime verification of mock recall Problem Details handlers",
-      "status": "completed_committed",
-      "commit": "5500f33"
-    },
-    {
-      "id": "9",
-      "name": "OpenAPI-only MockRecallDetail success shape",
-      "status": "completed_committed",
-      "commit": "cb587d3"
-    }
-  ],
+  "planning_artifacts": {
+    "project": ".planning/PROJECT.md",
+    "config": ".planning/config.json",
+    "research_dir": ".planning/research",
+    "codebase_map_dir": ".planning/codebase",
+    "requirements": ".planning/REQUIREMENTS.md",
+    "roadmap": ".planning/ROADMAP.md",
+    "state": ".planning/STATE.md",
+    "repo_instructions": "AGENTS.md"
+  },
   "current_state": {
-    "summary": "Paused and ready for consultant review of the next micro-batch after synchronizing project truth surfaces to the post-Batch-9 repo state.",
+    "summary": "GSD project initialization is underway/complete and the next safe workflow step is Phase 1 discussion.",
     "openapi_source_of_truth": "api/openapi.yaml",
     "generated_contract_types": "lib/api/generated/openapi-types.ts",
-    "mock_recall_not_found_handlers": "Runtime verified in Batch 8.",
+    "mock_recall_not_found_handlers": "Runtime verified in Batch 8 and mapped in .planning/codebase.",
     "mock_recall_detail_success_shape": "Contract-only in Batch 9; no successful runtime/storage flow exists yet.",
-    "known_untracked_files": [],
-    "tracked_context_files": [
-      {
-        "path": "PLAN.md",
-        "note": "Tracked by commit 470589f before Batch 10; Batch 10 does not edit or stage it."
-      }
-    ],
-    "ignored_artifacts_seen": [
-      ".next/",
-      "next-env.d.ts",
-      "node_modules/",
-      "tsconfig.tsbuildinfo"
-    ]
+    "phase_1_goal": "Maintainers can validate the API contract repeatably and review concrete MockRecallDetail/packet examples before runtime expansion."
   },
   "remaining_absences": [
     "No database.",
@@ -111,24 +48,18 @@
     "No imports or exports.",
     "No production workflow implementation."
   ],
-  "next_recommended_options": [
+  "next_recommended_actions": [
     {
-      "option": "Add a contract-only OpenAPI example for MockRecallDetail.",
-      "status": "not_started"
+      "action": "Run /gsd discuss-phase 1.",
+      "status": "ready"
     },
     {
-      "option": "Add a CI contract gate for existing OpenAPI lint/type checks.",
+      "action": "Then run /gsd plan-phase 1 after discussion context exists.",
       "status": "not_started"
     }
   ],
   "blockers": [],
-  "human_actions_pending": [
-    {
-      "action": "Review the synchronized truth surfaces and approve the next narrow micro-batch.",
-      "blocking": false
-    }
-  ],
   "critical_do_not_expand_without_approval": [
-    "Database, storage, auth, RBAC, middleware, audit log, route-handler behavior, generated types, package files, tests, fixtures, imports, exports, CSV generation, UI, supplier portal, OCR, ERP integration, and runtime traceability logic."
+    "Database, storage, auth, RBAC, middleware, audit log, route success behavior, generated types, package files, tests, fixtures, imports, exports, CSV generation, UI, supplier portal, OCR, ERP integration, and runtime traceability logic unless covered by the approved phase plan."
   ]
 }
