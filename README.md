@@ -13,9 +13,9 @@ Conservative FSMA 204 traceability readiness workflow. This product should help 
 
 - OpenAPI remains the source of truth at `api/openapi.yaml`.
 - Generated TypeScript contract types exist at `lib/api/generated/openapi-types.ts`.
-- Mock-recall not-found route handlers exist and are runtime-verified to return `application/problem+json` for missing mock recalls.
-- `MockRecallDetail` success response shape exists in OpenAPI and generated types only.
-- No database, auth, tenant model, RBAC, audit log, persisted traceability records, successful mock-recall runtime payloads, CSV generation, imports, exports, or production workflow implementation exists yet.
+- Mock-recall detail and packet routes include one OpenAPI-declared contract fixture plus `application/problem+json` not-found behavior for unknown mock recalls.
+- The fixture is for contract/runtime smoke checks only; no persisted mock-recall records or production CSV generation workflow exists yet.
+- No database, auth, tenant model, RBAC, audit log, persisted traceability records, imports, exports, or production workflow implementation exists yet.
 
 ## Setup and Checks
 
