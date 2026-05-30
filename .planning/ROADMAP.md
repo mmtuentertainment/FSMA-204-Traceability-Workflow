@@ -13,7 +13,7 @@ The roadmap starts from the existing scaffold, OpenAPI contract, generated types
 - Completed pre-GSD batches remain documented in `ops/deltas/` and are not renumbered into this roadmap.
 
 - [done] **Phase 1: Contract Gate And Examples** - Existing contract gate and reviewed MockRecall examples are documented, with truth surfaces reconciled.
-- [ ] **Phase 2: Problem Details Test Harness** - Protect current API error behavior with tests or equivalent verification.
+- [done] **Phase 2: Problem Details Test Harness** - Protect current API error behavior with tests or equivalent verification.
 - [ ] **Phase 3: Security And Persistence Foundation** - Introduce tenant/auth/RBAC/audit/idempotency foundations before production data.
 - [ ] **Phase 4: Traceability Lot And Event Records** - Add lot and CTE record workflow slices.
 - [ ] **Phase 5: Human Review Exceptions** - Add reviewable exceptions and status updates.
@@ -56,7 +56,9 @@ Plans:
 
 Plans:
 - [done] 02-01: Add the smallest route verification approach for the current MockRecall contract fixture and not-found behavior.
-- [ ] 02-02: Document verification scope and skipped runtime expansion.
+- [done] 02-02: Document verification scope and skipped runtime expansion.
+
+**Verification scope note:** Phase 2 completion means the existing not-found Problem Details behavior is protected by the committed `tests/mock-recall-contract-smoke.mjs` check and that scope is documented in `.planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md`. It does not add runtime success expansion, persistence, or production CSV generation; the only success path remains the single static contract fixture. Dynamic mock recall success runtime is Phase 7 and the security/persistence foundation is Phase 3.
 
 ### Phase 3: Security And Persistence Foundation
 
@@ -175,7 +177,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Contract Gate And Examples | 3/3 | Complete | 2026-05-30 |
-| 2. Problem Details Test Harness | 1/2 | In progress | - |
+| 2. Problem Details Test Harness | 2/2 | Complete | 2026-05-30 |
 | 3. Security And Persistence Foundation | 0/4 | Not started | - |
 | 4. Traceability Lot And Event Records | 0/3 | Not started | - |
 | 5. Human Review Exceptions | 0/3 | Not started | - |

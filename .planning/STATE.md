@@ -5,7 +5,7 @@
 See: `.planning/PROJECT.md` (updated 2026-05-28)
 
 **Core value:** A reviewer can assemble a trustworthy, human-reviewed mock recall readiness packet from traceability records and supplier KDE gaps without mistaking the workflow for legal or FDA approval.
-**Current focus:** Phase 1 - Contract Gate And Examples truth-surface closeout.
+**Current focus:** Phase 2 - Problem Details Test Harness verification-scope documentation (plan 02-02); documentation only, no runtime expansion.
 
 ## Current Repository State
 
@@ -28,6 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 - Roadmap: `.planning/ROADMAP.md`.
 - Repo instructions: `AGENTS.md`.
 - Phase 1 closeout: `.planning/phases/FSMA-01-contract-gate-and-examples/CLOSEOUT.md`.
+- Phase 2 verification scope: `.planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md`.
 
 ## Recent Decisions
 
@@ -38,10 +39,11 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 - Keep future work in small approved batches with `ops/deltas/` evidence.
 - Use GSD `interactive` mode with Codex text-mode and no auto-advance.
 - Start with Phase 1 rather than jumping directly into database, auth, CSV, or UI work.
+- Phase 2's immediate scope is documenting the existing Problem Details verification (the committed `tests/mock-recall-contract-smoke.mjs` smoke check), not runtime success expansion or persistence. The only success path remains the single static contract fixture.
 
 ## Next Step
 
-If continuing Phase 1, keep the next step to closeout or handoff wording using the existing CI contract gate, committed MockRecall smoke check, and reviewed OpenAPI examples as baseline evidence.
+Phase 2 verification scope is documented: the committed MockRecall smoke check protects the missing-resource `404 application/problem+json` behavior (with `type`, `title`, `status`, `detail`, `instance`) and the single static fixture success path. No runtime, persistence, or security work proceeds until an approved Phase 3+ batch; do not duplicate the CI contract gate or smoke harness unless verified drift requires it.
 
 ## Guardrails
 
