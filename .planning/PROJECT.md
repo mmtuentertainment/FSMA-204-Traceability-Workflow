@@ -18,11 +18,11 @@ A reviewer can assemble a trustworthy, human-reviewed mock recall readiness pack
 - [done] Mock recall detail and packet routes return typed `application/problem+json` not-found responses for missing resources.
 - [done] GitHub Actions contract gate runs npm install, OpenAPI freshness, typecheck, build, and MockRecall smoke checks on push and pull request events.
 - [done] Batch deltas document the current scaffold, OpenAPI, generated-type, runtime-verification, and truth-surface state.
+- [done] MockRecall OpenAPI examples for detail, packet CSV, and 404 Problem Details were reviewed against the fixture; no OpenAPI repair was needed.
 
 ### Active
 
 - [ ] Keep contract, generated types, README, product memory, and delta reports synchronized.
-- [ ] Add contract examples for `MockRecallDetail` and future CSV packet behavior before broad runtime implementation.
 - [ ] Implement traceability lots, CTE records, supplier KDE requests, exceptions, human review, mock recall summary, and FDA-style sortable CSV export in approved micro-batches.
 - [ ] Preserve tenant isolation, RBAC, idempotency, and append-only auditability before production data workflows.
 
@@ -88,4 +88,4 @@ After each milestone:
 4. Update Context with current state and evidence.
 
 ---
-*Last updated: 2026-05-28 after GSD project initialization*
+*Last updated: 2026-05-30 after MockRecall example review and truth-surface reconciliation*

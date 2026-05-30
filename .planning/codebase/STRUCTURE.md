@@ -31,7 +31,7 @@ focus: arch
 ## Operations Directory
 
 - `ops/memory/product.md` is concise product memory.
-- `ops/deltas/0000-baseline-scaffold.md` through `ops/deltas/0010-sync-truth-surfaces.md` document approved micro-batches.
+- `ops/deltas/*.md` documents approved micro-batches and review-only evidence, including the Phase 1 pointer repair, MockRecall example review, and truth-surface wording reconciliation.
 - Delta files should continue to capture goal, files changed, verification, skipped scope, and recommended next batch.
 
 ## Planning Directory

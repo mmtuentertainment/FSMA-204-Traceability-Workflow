@@ -11,7 +11,7 @@ focus: arch
 - This is a small contract-first Next.js App Router repository.
 - The user-facing UI is intentionally just a baseline status page in `app/page.tsx`.
 - API work is currently contract-led through `api/openapi.yaml`, with generated TypeScript types in `lib/api/generated/openapi-types.ts`.
-- Runtime implementation is limited to two mock-recall not-found route handlers.
+- Runtime implementation is limited to two mock-recall route handlers with one static contract fixture success path and not-found Problem Details for missing resources.
 
 ## Layers
 
@@ -27,7 +27,9 @@ focus: arch
 
 - A request to `GET /api/traceability/mock-recalls/{mockRecallId}` enters `app/api/traceability/mock-recalls/[mockRecallId]/route.ts`.
 - A request to `GET /api/traceability/mock-recalls/{mockRecallId}/packet.csv` enters `app/api/traceability/mock-recalls/[mockRecallId]/packet.csv/route.ts`.
-- The route awaits `params`, extracts `mockRecallId`, derives the request path from `new URL(request.url).pathname`, and calls `mockRecallNotFoundResponse()`.
+- The route awaits `params`, extracts `mockRecallId`, and checks the static MockRecall contract fixture.
+- The detail route returns the fixture as JSON for `contract-fixture-ready-for-review`; the packet route returns the fixture CSV for the same ID.
+- Missing mock-recall IDs derive the request path from `new URL(request.url).pathname` and call `mockRecallNotFoundResponse()`.
 - `mockRecallNotFoundResponse()` creates a typed Problem Details object and delegates to `problemResponse()`.
 - `problemResponse()` serializes JSON and sets `Content-Type: application/problem+json`.
 
@@ -35,7 +37,7 @@ focus: arch
 
 - The OpenAPI contract models lots, events, exceptions, supplier requests, mock recalls, mock recall detail, and Problem Details.
 - The runtime has no persistence layer, no in-memory store, and no data access abstraction.
-- There are no migrations, schemas, ORM files, repositories, or seed fixtures.
+- There are no migrations, schemas, ORM files, repositories, or persisted seed data.
 
 ## Product Architecture Boundary
 
