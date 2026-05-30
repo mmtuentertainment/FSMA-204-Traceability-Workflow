@@ -32,7 +32,12 @@
     "phase_1_closeout": ".planning/phases/FSMA-01-contract-gate-and-examples/CLOSEOUT.md"
   },
   "current_state": {
-    "summary": "GSD project initialization and Phase 1 context exist. The CI contract gate and MockRecall contract smoke check already exist. Batch 21 reviewed MockRecall OpenAPI examples and found no repair was needed; Batch 22 reconciled active truth surfaces without runtime changes.",
+    "summary": [
+      "GSD project initialization and Phase 1 context exist.",
+      "The CI contract gate and MockRecall contract smoke check already exist.",
+      "Batch 21 reviewed MockRecall OpenAPI examples and found no repair was needed.",
+      "Batch 22 reconciled active truth surfaces without runtime changes."
+    ],
     "openapi_source_of_truth": "api/openapi.yaml",
     "generated_contract_types": "lib/api/generated/openapi-types.ts",
     "ci_contract_gate": ".github/workflows/contract-gate.yml runs npm ci, npm run api:check, npm run typecheck, npm run build, and npm run test:mock-recall:contract on push and pull request events.",
