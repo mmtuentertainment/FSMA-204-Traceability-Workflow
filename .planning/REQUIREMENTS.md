@@ -1,6 +1,7 @@
 # Requirements: FSMA 204 Workflow Product
 
 **Defined:** 2026-05-28
+**Last updated:** 2026-05-30 after MockRecall example review and truth-surface reconciliation
 **Core Value:** A reviewer can assemble a trustworthy, human-reviewed mock recall readiness packet from traceability records and supplier KDE gaps without mistaking the workflow for legal or FDA approval.
 
 ## Brownfield Baseline
@@ -17,9 +18,9 @@ Already present before this requirements file:
 
 ### Governance
 
-- [ ] **GOV-01**: Maintainer can validate OpenAPI lint, generated-type freshness, TypeScript, and build checks through one repeatable gate.
-- [ ] **GOV-02**: Maintainer can add reviewed OpenAPI examples for `MockRecallDetail` and packet CSV behavior without changing runtime code.
-- [ ] **GOV-03**: Maintainer can keep README, product memory, handoff state, and delta reports synchronized with the real repo state.
+- [done] **GOV-01**: Maintainer can validate OpenAPI lint, generated-type freshness, TypeScript, build, and MockRecall smoke checks through the existing repeatable gate.
+- [done] **GOV-02**: Maintainer has reviewed OpenAPI examples for `MockRecallDetail`, packet CSV, and missing-resource Problem Details without changing runtime code.
+- [done] **GOV-03**: Maintainer can keep README, product memory, handoff state, and delta reports synchronized with the real repo state.
 
 ### Runtime API
 
@@ -86,9 +87,9 @@ Deferred to future milestones:
 | BASE-03 | Existing baseline | Complete |
 | BASE-04 | Existing baseline | Complete |
 | BASE-05 | Existing baseline | Complete |
-| GOV-01 | Phase 1 | Pending |
-| GOV-02 | Phase 1 | Pending |
-| GOV-03 | Phase 1 | Pending |
+| GOV-01 | Phase 1 | Complete |
+| GOV-02 | Phase 1 | Complete |
+| GOV-03 | Phase 1 | Complete |
 | RUN-01 | Phase 2 | Pending |
 | RUN-02 | Phase 3 | Pending |
 | RUN-03 | Phase 8 | Pending |
@@ -107,10 +108,10 @@ Deferred to future milestones:
 **Coverage:**
 
 - Brownfield baseline requirements: 5 total, 5 complete.
-- v1 requirements: 17 total.
+- v1 requirements: 17 total, 3 complete, 14 pending.
 - Mapped to phases: 17.
 - Unmapped: 0.
 
 ---
 *Requirements defined: 2026-05-28*
-*Last updated: 2026-05-28 after GSD project initialization*
+*Last updated: 2026-05-30 after MockRecall example review and truth-surface reconciliation*

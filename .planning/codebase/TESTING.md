@@ -31,6 +31,7 @@ focus: quality
 
 - `ops/deltas/0009-openapi-mock-recall-detail-success-shape.md` records passing `api:types`, `api:lint`, `api:types:check`, `typecheck`, `build`, and `git diff --check` for the `MockRecallDetail` contract change.
 - `ops/deltas/0010-sync-truth-surfaces.md` records passing OpenAPI lint, generated-type check, typecheck, build, and diff checks after documentation sync.
+- `ops/deltas/0021-mock-recall-contract-example-review.md` records that MockRecall OpenAPI examples matched fixture and missing-resource behavior without an OpenAPI repair.
 
 ## Testing Gaps
 

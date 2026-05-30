@@ -39,7 +39,7 @@ focus: concerns
 
 ## Operational Concerns
 
-- `.planning/HANDOFF.json` says the next work should be consultant-approved and micro-batch sized.
-- Current recommended next options should build on the existing contract examples, CI gate, and MockRecall smoke coverage.
+- Current handoff guidance keeps any remaining Phase 1 work to closeout or handoff wording unless Matt approves a new micro-batch.
+- No MockRecall OpenAPI repair is pending; future options should build on the existing reviewed examples, CI gate, and MockRecall smoke coverage.
 - `PLAN.md` is tracked and should not be edited unless explicitly approved.
 - No remote push should be assumed from local commits unless requested.

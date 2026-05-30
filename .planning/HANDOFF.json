@@ -1,10 +1,10 @@
 {
   "version": "1.1",
-  "timestamp": "2026-05-29T00:00:00-04:00",
+  "timestamp": "2026-05-30T00:00:00-04:00",
   "phase": 1,
   "phase_name": "Contract Gate And Examples",
-  "phase_dir": ".planning/phases/01-contract-gate-and-examples",
-  "status": "truth_surfaces_synced_ci_gate_and_mock_recall_smoke_exist",
+  "phase_dir": ".planning/phases/FSMA-01-contract-gate-and-examples",
+  "status": "phase_1_truth_surfaces_reconciled_after_example_review",
   "repo": {
     "path": "C:\\Users\\matth\\Desktop\\FSMA 204 Workflow Product",
     "branch": "main",
@@ -26,17 +26,26 @@
     "requirements": ".planning/REQUIREMENTS.md",
     "roadmap": ".planning/ROADMAP.md",
     "state": ".planning/STATE.md",
-    "repo_instructions": "AGENTS.md"
+    "repo_instructions": "AGENTS.md",
+    "phase_1_context": ".planning/phases/FSMA-01-contract-gate-and-examples/01-CONTEXT.md",
+    "phase_1_discussion_log": ".planning/phases/FSMA-01-contract-gate-and-examples/01-DISCUSSION-LOG.md",
+    "phase_1_closeout": ".planning/phases/FSMA-01-contract-gate-and-examples/CLOSEOUT.md"
   },
   "current_state": {
-    "summary": "GSD project initialization is complete. The CI contract gate and MockRecall contract smoke check already exist; remaining safe work should build on them without duplicating the workflow or smoke harness.",
+    "summary": [
+      "GSD project initialization and Phase 1 context exist.",
+      "The CI contract gate and MockRecall contract smoke check already exist.",
+      "Batch 21 reviewed MockRecall OpenAPI examples and found no repair was needed.",
+      "Batch 22 reconciled active truth surfaces without runtime changes."
+    ],
     "openapi_source_of_truth": "api/openapi.yaml",
     "generated_contract_types": "lib/api/generated/openapi-types.ts",
     "ci_contract_gate": ".github/workflows/contract-gate.yml runs npm ci, npm run api:check, npm run typecheck, npm run build, and npm run test:mock-recall:contract on push and pull request events.",
     "mock_recall_contract_smoke": "tests/mock-recall-contract-smoke.mjs verifies the current contract fixture and missing-resource Problem Details behavior against a production Next server.",
+    "mock_recall_examples_review": "Batch 21 found the MockRecall detail, packet CSV, and 404 Problem Details examples aligned with runtime fixture intent; api/openapi.yaml was unchanged.",
     "mock_recall_not_found_handlers": "Runtime verified in Batch 8 and protected by the committed MockRecall contract smoke check.",
     "mock_recall_detail_success_shape": "One contract fixture exists for runtime smoke checks; no persisted or storage-backed success flow exists yet.",
-    "phase_1_goal": "Maintainers can validate the API contract repeatably and review concrete MockRecallDetail/packet examples before runtime expansion."
+    "phase_1_goal": "Maintainers can validate the API contract repeatably and rely on reviewed MockRecallDetail/packet examples before runtime expansion."
   },
   "remaining_absences": [
     "No database.",
@@ -52,7 +61,7 @@
   ],
   "next_recommended_actions": [
     {
-      "action": "Complete remaining Phase 1 contract examples and truth-surface synchronization using the existing CI gate and MockRecall smoke check as baseline evidence.",
+      "action": "If Phase 1 continues, limit it to closeout or consultant handoff of existing truth surfaces; do not rebuild the CI gate, smoke harness, or MockRecall examples unless new drift is verified.",
       "status": "ready"
     },
     {

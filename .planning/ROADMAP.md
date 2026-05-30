@@ -2,7 +2,7 @@
 
 ## Overview
 
-The roadmap starts from the existing scaffold, OpenAPI contract, generated types, CI contract gate, committed MockRecall contract smoke check, and mock-recall Problem Details handlers. It moves forward in small, reviewable phases: first protecting the contract with examples and CI, then adding runtime behavior, persistence/security foundations, traceability workflow slices, supplier KDE tracking, mock recall readiness summaries, and FDA-style sortable CSV export. Each phase must preserve conservative FSMA language and explicit human review.
+The roadmap starts from the existing scaffold, OpenAPI contract, generated types, CI contract gate, committed MockRecall contract smoke check, reviewed MockRecall examples, and mock-recall Problem Details handlers. It moves forward in small, reviewable phases: first keeping contract truth surfaces synchronized, then adding runtime behavior, persistence/security foundations, traceability workflow slices, supplier KDE tracking, mock recall readiness summaries, and FDA-style sortable CSV export. Each phase must preserve conservative FSMA language and explicit human review.
 
 ## Phases
 
@@ -12,7 +12,7 @@ The roadmap starts from the existing scaffold, OpenAPI contract, generated types
 - Decimal phases are urgent insertions and must be marked `INSERTED`.
 - Completed pre-GSD batches remain documented in `ops/deltas/` and are not renumbered into this roadmap.
 
-- [ ] **Phase 1: Contract Gate And Examples** - Add a repeatable contract gate and reviewed OpenAPI examples.
+- [done] **Phase 1: Contract Gate And Examples** - Existing contract gate and reviewed MockRecall examples are documented, with truth surfaces reconciled.
 - [ ] **Phase 2: Problem Details Test Harness** - Protect current API error behavior with tests or equivalent verification.
 - [ ] **Phase 3: Security And Persistence Foundation** - Introduce tenant/auth/RBAC/audit/idempotency foundations before production data.
 - [ ] **Phase 4: Traceability Lot And Event Records** - Add lot and CTE record workflow slices.
@@ -25,7 +25,7 @@ The roadmap starts from the existing scaffold, OpenAPI contract, generated types
 
 ### Phase 1: Contract Gate And Examples
 
-**Goal**: Maintainers can validate the API contract repeatably and review concrete `MockRecallDetail`/packet examples before runtime expansion.
+**Goal**: Maintainers can validate the API contract repeatably and rely on reviewed `MockRecallDetail`/packet examples before runtime expansion.
 **Mode:** mvp
 **Depends on**: Existing baseline.
 **Requirements**: GOV-01, GOV-02, GOV-03
@@ -37,9 +37,9 @@ The roadmap starts from the existing scaffold, OpenAPI contract, generated types
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Add contract examples for mock recall detail and packet states.
+- [done] 01-01: Add and review contract examples for mock recall detail and packet states.
 - [done] 01-02: Add repeatable contract gate script or CI workflow.
-- [ ] 01-03: Sync truth surfaces and delta evidence.
+- [done] 01-03: Sync truth surfaces and delta evidence.
 
 ### Phase 2: Problem Details Test Harness
 
@@ -174,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Contract Gate And Examples | 1/3 | In progress | - |
+| 1. Contract Gate And Examples | 3/3 | Complete | 2026-05-30 |
 | 2. Problem Details Test Harness | 1/2 | In progress | - |
 | 3. Security And Persistence Foundation | 0/4 | Not started | - |
 | 4. Traceability Lot And Event Records | 0/3 | Not started | - |
