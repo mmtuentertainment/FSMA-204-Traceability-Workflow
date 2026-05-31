@@ -30,3 +30,16 @@ reviews:
         The security boundary maps a cross-tenant miss to 404 (never 403) to
         avoid leaking resource existence across tenants; preserve that
         ordering when reviewing changes.
+  pre_merge_checks:
+    # Drop the org-level custom checks that were set up for a Chrome-extension
+    # project (perf-budget, test-coverage-standards, chrome-extension-security,
+    # 250-line). An empty array overrides the org set (inheritance is off by
+    # default), so none of them run on this backend repo.
+    custom_checks: []
+    # Silence the docstring-coverage gate: the 80% threshold misfires on this
+    # TS backend API, which defers formal docstrings (.planning/codebase/TESTING.md).
+    docstrings:
+      mode: "off"
+    # No linked-issue workflow in this repo.
+    issue_assessment:
+      mode: "off"
