@@ -5,7 +5,7 @@
 See: `.planning/PROJECT.md` (updated 2026-05-28)
 
 **Core value:** A reviewer can assemble a trustworthy, human-reviewed mock recall readiness packet from traceability records and supplier KDE gaps without mistaking the workflow for legal or FDA approval.
-**Current focus:** Phase 3 - 03-01A security/persistence boundary decision; design only, implementation pending explicit approval.
+**Current focus:** Phase 3 - boundary skeleton implemented (Batch 29). The MockRecall read routes now flow through server-derived request context, deny-by-default authorization, a tenant-scoped data seam, the Problem catalog, and idempotency/audit interface shapes, with byte-identical fixture behavior. Further Phase 3 work (auth/persistence providers and enforcement) remains pending explicit approval.
 
 ## Current Repository State
 
@@ -14,7 +14,8 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 - Remote: `https://github.com/mmtuentertainment/FSMA-204-Traceability-Workflow.git`.
 - OpenAPI source of truth: `api/openapi.yaml`.
 - Generated types: `lib/api/generated/openapi-types.ts`.
-- Runtime implemented today: mock recall detail and packet routes expose one contract fixture for smoke checks and return not-found Problem Details for missing resources.
+- Runtime implemented today: mock recall detail and packet routes expose one contract fixture for smoke checks and return not-found Problem Details for missing resources. As of Batch 29 these routes flow through the boundary skeleton (request-context resolver, deny-by-default authorization, tenant-scoped `MockRecallSource`, Problem catalog) with byte-identical behavior.
+- Boundary skeleton seams (`lib/security/request-context.ts`, `lib/security/authorization.ts`, `lib/api/mock-recall-source.ts`, `lib/api/route-boundary.ts`, `lib/security/idempotency-audit.ts`) are interface shapes plus public-fixture default adapters only: no auth provider, no persistence/storage, no enforcement on non-public tenants, and idempotency/audit are uninvoked.
 - MockRecall OpenAPI examples have been reviewed against the fixture and missing-resource behavior; no OpenAPI repair or runtime change was needed.
 - Current absences: database, auth, tenant model, RBAC, audit log, persisted traceability records, imports, exports, storage-backed mock recall payloads, production CSV generation, and production workflow logic.
 
@@ -44,10 +45,12 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 - Phase 2's immediate scope is documenting the existing Problem Details verification (the committed `tests/mock-recall-contract-smoke.mjs` smoke check), not runtime success expansion or persistence. The only success path remains the single static contract fixture.
 - Phase 3 kickoff planning defines the approval gate and invariants for security/persistence work; no implementation has started.
 - 03-01A chooses a provider-neutral boundary model: server-derived tenant identity, request-boundary auth, deny-by-default RBAC, tenant-scoped persistence, and paired idempotency/audit for future writes.
+- Batch 29 implemented the approved boundary skeleton (Variant A) for that model: the two MockRecall read routes flow through a request-context resolver, a deny-by-default authorization policy, a tenant-scoped `MockRecallSource`, and the Problem catalog (now with 401/403 entries), with idempotency/audit as interface shapes only. Fixture success and 404 behavior are byte-identical; no provider, storage, OpenAPI, generated-type, or package change. Phase 3 is not complete.
+- Batches 27-28 (Phase 1-2 of the refactor plan) made the packet CSV a derived projection and reshaped Problem Details into a named catalog seam, both byte-identical.
 
 ## Next Step
 
-Review and approve, reject, or revise the 03-01A boundary decision before any security or persistence implementation starts. The next smallest implementation candidate is a tightly scoped boundary skeleton only if Matt explicitly approves a code-bearing batch.
+The boundary skeleton (Batch 29) is in place. The next approved batch is the first mutating-write path, which activates the idempotency and audit interfaces and a non-public resolver/policy, and selects a persistence and auth provider. No provider, storage, or enforcement on non-public tenants exists yet, and the optional `@/*` path alias was deferred.
 
 ## Guardrails
 
