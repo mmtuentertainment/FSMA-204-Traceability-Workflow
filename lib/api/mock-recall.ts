@@ -32,11 +32,25 @@ const mockRecallContractFixture: MockRecallDetail = {
   updatedAt: "2026-05-28T00:00:00Z",
 };
 
-const mockRecallPacketCsv = [
-  "mock_recall_id,traceability_lot_code,product_description,human_review_required,readiness_status",
-  "contract-fixture-ready-for-review,TLC-FC-2026-05-READY,Fresh-cut melon cup,true,ready_for_human_review",
-  "",
-].join("\r\n");
+// Fixture-scoped projection of a MockRecall record to its readiness packet CSV.
+// Derives the same bytes the contract example and smoke test pin (CRLF + trailing
+// line). Deliberately has no CSV escaping/quoting: production CSV generation over
+// arbitrary records is deferred to the export phase, not this contract-fidelity seam.
+function toPacketCsv(detail: MockRecallDetail): string {
+  const header =
+    "mock_recall_id,traceability_lot_code,product_description,human_review_required,readiness_status";
+  const row = [
+    detail.mockRecallId,
+    detail.scope.traceabilityLotCode,
+    detail.scope.productDescription,
+    String(detail.readinessSummary.humanReviewRequired),
+    detail.status,
+  ].join(",");
+
+  return [header, row, ""].join("\r\n");
+}
+
+const mockRecallPacketCsv = toPacketCsv(mockRecallContractFixture);
 
 export function getMockRecallDetail(
   mockRecallId: string,
