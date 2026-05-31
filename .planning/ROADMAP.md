@@ -80,6 +80,8 @@ Plans:
 - [ ] 03-03: Add idempotency and append-only audit foundation.
 - [ ] 03-04: Verify security and artifact hygiene.
 
+**Kickoff note:** Planning exists at `.planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md`. Phase 3 implementation is not started and requires explicit approval before any code, package, OpenAPI, database, auth, RBAC, audit, or persistence change.
+
 ### Phase 4: Traceability Lot And Event Records
 
 **Goal**: Reviewers can create and inspect the core lot and event records needed for mock recall readiness.

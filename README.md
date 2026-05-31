@@ -17,6 +17,7 @@ Conservative FSMA 204 traceability readiness workflow. This product should help 
 - MockRecall OpenAPI examples were reviewed against the fixture and missing-resource behavior; no OpenAPI repair was needed.
 - The fixture is for contract/runtime smoke checks only; no persisted mock-recall records or production CSV generation workflow exists yet.
 - No database, auth, tenant model, RBAC, audit log, persisted traceability records, imports, exports, or production workflow implementation exists yet.
+- Phase 1 and Phase 2 are complete. Phase 3 kickoff planning exists at `.planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md`; implementation has not started and requires explicit approval.
 
 ## Setup and Checks
 
