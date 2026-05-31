@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://storage.googleapis.com/coderabbit_public_assets/schema.v2.json
+language: en-US
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/.next/**"
+    - "!**/out/**"
+    - "!**/dist/**"
+    - "!**/*.lock"
+    - "!package-lock.json"
+    - "!lib/api/generated/**"
+  path_instructions:
+    - path: "lib/**/*.ts"
+      instructions: >-
+        Contract-first FSMA 204 traceability scaffold. Flag any change that
+        could alter runtime response bytes: the mock-recall contract smoke
+        test pins exact packet CSV (CRLF + trailing line) and RFC 9457
+        Problem Details output. Treat the OpenAPI contract and generated
+        types as read-only oracles.
+    - path: "app/api/**/route.ts"
+      instructions: >-
+        Route handlers must preserve byte-identical success and 404 behavior.
+        The security boundary maps a cross-tenant miss to 404 (never 403) to
+        avoid leaking resource existence across tenants; preserve that
+        ordering when reviewing changes.
