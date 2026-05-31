@@ -16,6 +16,12 @@ export function problemResponse(problem: Problem): Response {
 // call site. One entry today; the request boundary adds auth entries behind this seam.
 const PROBLEM_CATALOG = {
   notFound: { type: "about:blank", title: "Resource not found", status: 404 },
+  unauthorized: {
+    type: "about:blank",
+    title: "Authentication required",
+    status: 401,
+  },
+  forbidden: { type: "about:blank", title: "Forbidden", status: 403 },
 } as const;
 
 export function mockRecallNotFoundResponse(
@@ -27,4 +33,16 @@ export function mockRecallNotFoundResponse(
     detail: `No mock recall was found for mockRecallId "${mockRecallId}".`,
     instance,
   });
+}
+
+// Auth boundary errors, consumed by the request boundary. The contract declares
+// Unauthorized (401) and Forbidden (403) responses; these construct them. They are
+// dormant for the current public fixture (the policy allows the read actions) but
+// are the boundary's vocabulary once a non-public resolver/policy is wired.
+export function unauthorizedResponse(instance: string): Response {
+  return problemResponse({ ...PROBLEM_CATALOG.unauthorized, instance });
+}
+
+export function forbiddenResponse(instance: string): Response {
+  return problemResponse({ ...PROBLEM_CATALOG.forbidden, instance });
 }

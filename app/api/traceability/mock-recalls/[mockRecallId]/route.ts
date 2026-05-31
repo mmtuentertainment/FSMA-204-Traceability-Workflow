@@ -1,5 +1,5 @@
-import { mockRecallNotFoundResponse } from "../../../../../lib/api/problem";
-import { getMockRecallDetail } from "../../../../../lib/api/mock-recall";
+import { fixtureMockRecallSource } from "../../../../../lib/api/mock-recall-source";
+import { handleReadAction } from "../../../../../lib/api/route-boundary";
 
 type RouteContext = {
   params: Promise<{ mockRecallId: string }>;
@@ -10,12 +10,13 @@ export async function GET(
   { params }: RouteContext,
 ): Promise<Response> {
   const { mockRecallId } = await params;
-  const instance = new URL(request.url).pathname;
-  const detail = getMockRecallDetail(mockRecallId);
 
-  if (detail) {
-    return Response.json(detail);
-  }
-
-  return mockRecallNotFoundResponse(mockRecallId, instance);
+  return handleReadAction({
+    request,
+    action: "mock_recall.read",
+    resourceId: mockRecallId,
+    load: (ctx) =>
+      fixtureMockRecallSource.getDetail(ctx.tenant.tenantId, mockRecallId),
+    render: (detail) => Response.json(detail),
+  });
 }
