@@ -5,7 +5,7 @@
 See: `.planning/PROJECT.md` (updated 2026-05-28)
 
 **Core value:** A reviewer can assemble a trustworthy, human-reviewed mock recall readiness packet from traceability records and supplier KDE gaps without mistaking the workflow for legal or FDA approval.
-**Current focus:** Phase 2 - Problem Details Test Harness verification-scope documentation (plan 02-02); documentation only, no runtime expansion.
+**Current focus:** Phase 3 - 03-01A security/persistence boundary decision; design only, implementation pending explicit approval.
 
 ## Current Repository State
 
@@ -29,6 +29,8 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 - Repo instructions: `AGENTS.md`.
 - Phase 1 closeout: `.planning/phases/FSMA-01-contract-gate-and-examples/CLOSEOUT.md`.
 - Phase 2 verification scope: `.planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md`.
+- Phase 3 kickoff plan: `.planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md`.
+- Phase 3 03-01A boundary decision: `.planning/phases/FSMA-03-security-and-persistence-foundation/03-01A-boundary-decision.md`.
 
 ## Recent Decisions
 
@@ -40,10 +42,12 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 - Use GSD `interactive` mode with Codex text-mode and no auto-advance.
 - Start with Phase 1 rather than jumping directly into database, auth, CSV, or UI work.
 - Phase 2's immediate scope is documenting the existing Problem Details verification (the committed `tests/mock-recall-contract-smoke.mjs` smoke check), not runtime success expansion or persistence. The only success path remains the single static contract fixture.
+- Phase 3 kickoff planning defines the approval gate and invariants for security/persistence work; no implementation has started.
+- 03-01A chooses a provider-neutral boundary model: server-derived tenant identity, request-boundary auth, deny-by-default RBAC, tenant-scoped persistence, and paired idempotency/audit for future writes.
 
 ## Next Step
 
-Phase 2 verification scope is documented: the committed MockRecall smoke check protects the missing-resource `404 application/problem+json` behavior (with `type`, `title`, `status`, `detail`, `instance`) and the single static fixture success path. No runtime, persistence, or security work proceeds until an approved Phase 3+ batch; do not duplicate the CI contract gate or smoke harness unless verified drift requires it.
+Review and approve, reject, or revise the 03-01A boundary decision before any security or persistence implementation starts. The next smallest implementation candidate is a tightly scoped boundary skeleton only if Matt explicitly approves a code-bearing batch.
 
 ## Guardrails
 

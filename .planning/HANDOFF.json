@@ -1,10 +1,10 @@
 {
-  "version": "1.2",
-  "timestamp": "2026-05-30T12:00:00-04:00",
-  "phase": 2,
-  "phase_name": "Problem Details Test Harness",
-  "phase_dir": ".planning/phases/FSMA-02-problem-details-test-harness",
-  "status": "phase_2_problem_details_verification_scope_documented",
+  "version": "1.4",
+  "timestamp": "2026-05-30T18:10:00-04:00",
+  "phase": 3,
+  "phase_name": "Security And Persistence Foundation",
+  "phase_dir": ".planning/phases/FSMA-03-security-and-persistence-foundation",
+  "status": "phase_3_03_01a_boundary_decision_ready_pending_approval",
   "repo": {
     "path": "C:\\Users\\matth\\Desktop\\FSMA 204 Workflow Product",
     "branch": "main",
@@ -30,7 +30,9 @@
     "phase_1_context": ".planning/phases/FSMA-01-contract-gate-and-examples/01-CONTEXT.md",
     "phase_1_discussion_log": ".planning/phases/FSMA-01-contract-gate-and-examples/01-DISCUSSION-LOG.md",
     "phase_1_closeout": ".planning/phases/FSMA-01-contract-gate-and-examples/CLOSEOUT.md",
-    "phase_2_verification_scope": ".planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md"
+    "phase_2_verification_scope": ".planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md",
+    "phase_3_kickoff_plan": ".planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md",
+    "phase_3_03_01a_boundary_decision": ".planning/phases/FSMA-03-security-and-persistence-foundation/03-01A-boundary-decision.md"
   },
   "current_state": {
     "summary": [
@@ -38,7 +40,9 @@
       "The CI contract gate and MockRecall contract smoke check already exist.",
       "Batch 21 reviewed MockRecall OpenAPI examples and found no repair was needed.",
       "Batch 22 reconciled active truth surfaces without runtime changes.",
-      "Batch 24 documented the Phase 2 MockRecall Problem Details verification scope without runtime expansion."
+      "Batch 24 documented the Phase 2 MockRecall Problem Details verification scope without runtime expansion.",
+      "Phase 3 kickoff planning exists and is pending approval before implementation.",
+      "03-01A documents the provider-neutral security and persistence boundary decision without starting implementation."
     ],
     "openapi_source_of_truth": "api/openapi.yaml",
     "generated_contract_types": "lib/api/generated/openapi-types.ts",
@@ -50,7 +54,11 @@
     "phase_1_goal": "Maintainers can validate the API contract repeatably and rely on reviewed MockRecallDetail/packet examples before runtime expansion.",
     "phase_2_goal": "The existing not-found Problem Details behavior is protected by committed verification, with that scope documented and runtime expansion explicitly deferred.",
     "phase_2_verification_scope": "tests/mock-recall-contract-smoke.mjs protects: missing mock recall detail returns 404 application/problem+json; missing packet CSV returns 404 application/problem+json (not text/csv); the Problem Details body includes type, title, status, detail, and instance; success coverage remains the single static contract fixture only.",
-    "phase_2_verification_scope_doc": ".planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md"
+    "phase_2_verification_scope_doc": ".planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md",
+    "phase_3_goal": "Establish the approved security and persistence foundation for server-derived tenant context, auth/RBAC boundaries, idempotency, persistence shape, and append-only audit evidence before production-like traceability data workflows.",
+    "phase_3_kickoff_plan": ".planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md",
+    "phase_3_status": "03-01A design decision documented; no Phase 3 implementation has started.",
+    "phase_3_03_01a_boundary_decision": "Server-derived tenant identity, request-boundary auth, deny-by-default action RBAC, tenant-scoped persistence, and paired idempotency/audit boundaries are the high-level model for future approved implementation."
   },
   "remaining_absences": [
     "No database.",
@@ -66,11 +74,11 @@
   ],
   "next_recommended_actions": [
     {
-      "action": "Phase 2 verification scope is documented; treat tests/mock-recall-contract-smoke.mjs and .github/workflows/contract-gate.yml as the protected baseline and do not duplicate them unless verified drift requires it.",
+      "action": "Review and approve, reject, or revise the 03-01A boundary decision before any code-bearing security or persistence batch starts.",
       "status": "ready"
     },
     {
-      "action": "Do not begin runtime success expansion, persistence, auth, tenant, RBAC, audit, idempotency, or production CSV work; these require an approved Phase 3+ batch.",
+      "action": "Do not begin runtime success expansion, persistence, auth, tenant, RBAC, audit, idempotency, or production CSV work until Matt approves a concrete micro-batch.",
       "status": "blocked_pending_approval"
     }
   ],
