@@ -9,7 +9,7 @@ focus: arch
 ## Top-Level Layout
 
 - `AGENTS.md` contains project instructions, product scope, batch discipline, Context7 rules, and future API guardrails.
-- `README.md` describes stack, setup checks, and current state, but it is currently behind the Phase 3 boundary-skeleton posture.
+- `README.md` describes stack, setup checks, and the current Phase 3 fixture-only posture.
 - `PLAN.md` is a tracked baseline scaffold plan and should not be edited unless explicitly approved.
 - `package.json` and `package-lock.json` define the npm project and locked dependencies.
 - `tsconfig.json` defines TypeScript and Next settings.
@@ -21,25 +21,28 @@ focus: arch
 - `app/page.tsx` is the minimal status page.
 - `app/api/traceability/mock-recalls/[mockRecallId]/route.ts` handles mock recall detail requests.
 - `app/api/traceability/mock-recalls/[mockRecallId]/packet.csv/route.ts` handles packet CSV requests.
+- `app/api/traceability/exceptions/[exceptionId]/route.ts` handles the fixture-only exception-review PATCH.
 
 ## API And Library Directory
 
 - `api/openapi.yaml` is the authoritative API contract.
 - `lib/api/mock-recall.ts` owns the static MockRecall contract fixture and derives the fixture packet CSV.
 - `lib/api/mock-recall-source.ts` defines the tenant-scoped `MockRecallSource` seam and public-fixture adapter.
+- `lib/api/exception-review.ts` owns the fixture exception record, patch validation, request fingerprinting, and fixture repository exports.
 - `lib/api/problem.ts` is the shared Problem Details response helper and catalog.
 - `lib/api/route-boundary.ts` is the read-route request boundary.
 - `lib/api/generated/openapi-types.ts` is generated from OpenAPI and should not be manually edited.
 
 ## Security Directory
 
-- `lib/security/request-context.ts` defines server-owned request identity and the public fixture resolver.
-- `lib/security/authorization.ts` defines action-oriented authorization and the public fixture policy.
-- `lib/security/idempotency-audit.ts` defines future mutating-write idempotency and audit interfaces.
+- `lib/security/request-context.ts` defines server-owned request identity, the public fixture resolver, and local/test fixture auth for the exception-review PATCH.
+- `lib/security/authorization.ts` defines action-oriented authorization, the public fixture policy, and the fixture reviewer policy.
+- `lib/security/idempotency-audit.ts` defines mutating-write idempotency/audit interfaces plus fixture in-memory stores.
 
 ## Test And CI Directory
 
 - `tests/mock-recall-contract-smoke.mjs` starts a production Next server and checks fixture detail, fixture CSV, and missing-resource Problem Details.
+- `tests/exception-review-patch.test.ts` directly exercises the fixture-only exception-review PATCH path; it is not wired into package scripts or CI in this batch.
 - `.github/workflows/contract-gate.yml` runs the install, contract, typecheck, build, and smoke-test gate on push and pull request events.
 
 ## Operations Directory
@@ -52,6 +55,8 @@ focus: arch
   - `0029-boundary-skeleton.md`
   - `0030-provider-activation-hardening.md`
   - `0031-phase-3-first-mutating-write-design.md`
+  - `0034-exception-review-patch-fixture-activation.md`
+  - `0035-production-provider-selection.md`
 
 ## Planning Directory
 
@@ -75,5 +80,5 @@ focus: arch
 - Do not hand-edit `lib/api/generated/openapi-types.ts`; update `api/openapi.yaml` and run the generator.
 - Do not expand `AGENTS.md` regulatory claims beyond readiness workflow, human review, and FDA-style sortable export.
 - Do not edit `PLAN.md` during unrelated batches.
-- Do not add runtime product logic, database, auth, tenant model, RBAC, audit logging, imports, exports, or CSV generation without an approved batch.
+- Do not add production runtime product logic, database, production auth provider, production tenant model, production RBAC provider, persisted audit logging, imports, exports, or CSV generation without an approved batch.
 - Keep `INTEL.md` local-only unless Matt explicitly asks otherwise.

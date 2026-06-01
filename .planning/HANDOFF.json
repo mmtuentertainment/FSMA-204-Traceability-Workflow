@@ -48,7 +48,7 @@
       "03-01A documents the provider-neutral security and persistence boundary decision without starting implementation.",
       "Batch 27 made the MockRecall packet CSV a derived projection of the fixture record (byte-identical).",
       "Batch 28 reshaped Problem Details into a named catalog seam with a notFound entry (byte-identical).",
-      "Batch 29 implemented the approved boundary skeleton (Variant A): the two MockRecall read routes flow through server-derived request context, deny-by-default authorization, a tenant-scoped MockRecallSource, and the Problem catalog, with idempotency/audit as uninvoked interface shapes and byte-identical runtime behavior.",
+      "Batch 29 implemented the approved boundary skeleton (Variant A): the two MockRecall read routes flow through server-derived request context, deny-by-default authorization, a tenant-scoped MockRecallSource, and the Problem catalog, with idempotency/audit as interface shapes for future writes and byte-identical read behavior.",
       "Batch 34 implemented the first approved mutating write for exception-review PATCH only, using local/test fixture auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, an in-memory fixture exception repository, idempotency replay/conflict handling, and append-only in-memory audit evidence.",
       "Batch 35 recorded the docs-only production provider-selection direction for the exception-review PATCH path: server-verified auth/session, server-derived tenant membership, tenant-scoped relational persistence, durable idempotency entries, and append-only audit evidence."
     ],

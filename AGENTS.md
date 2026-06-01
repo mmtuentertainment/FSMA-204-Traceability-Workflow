@@ -10,8 +10,10 @@
 
 - Use conservative FSMA language: readiness workflow, human review, and FDA-style sortable export.
 - Do not claim compliance certification, legal advice, or FDA endorsement.
-- Current posture is an OpenAPI-first scaffold with generated contract checks, a CI contract gate, and one MockRecall contract smoke fixture.
-- No persistence, authentication, tenant model, RBAC, audit log, imports, exports, production CSV generation, or production workflow logic exists yet.
+- Current posture is an OpenAPI-first scaffold with generated contract checks, a CI contract gate, one MockRecall contract smoke fixture, and one fixture-only exception-review PATCH.
+- The exception-review PATCH uses local/test fixture auth, server-derived fixture tenant identity, reviewer RBAC, in-memory fixture state, idempotency replay/conflict handling, and in-memory audit evidence only.
+- No production auth provider, database persistence, production tenant model, production RBAC provider, persisted audit log, imports, exports, production CSV generation, or broader production workflow logic exists yet.
+- Phase 3 has started but is not complete; Phase 4-8 runtime work remains out of scope unless a later approved micro-batch explicitly lifts that boundary.
 
 ## Batch Discipline
 

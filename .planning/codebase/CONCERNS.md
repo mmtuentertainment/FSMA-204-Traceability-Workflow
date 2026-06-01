@@ -16,22 +16,24 @@ focus: concerns
 
 - Phase 3 has started but is not complete.
 - The boundary skeleton is real code, but it is only provider-neutral scaffolding around existing read routes.
+- The exception-review PATCH is also real code, but it is fixture-only and limited to one approved route.
 - The default resolver and policy are public-fixture adapters, not production auth or tenant enforcement.
-- Idempotency and audit interfaces exist but are uninvoked.
-- The Batch 31 exception-review PATCH design remains gated behind an explicit Phase 4-8 Non-Goal lift and provider/auth/RBAC/idempotency/audit/persistence decisions.
+- The PATCH route uses local/test fixture auth, in-memory fixture idempotency, and in-memory fixture audit evidence; production provider wiring, durable idempotency, and persisted audit remain absent.
+- The Phase 4-8 Non-Goal lift has been approved only for the Batch 34 fixture-only exception-review PATCH. Broader supplier, lot/event, export, CSV, database, production auth, and production persistence work remains gated.
 
 ## Contract Runtime Gap
 
 - `api/openapi.yaml` defines many endpoints that do not exist at runtime.
 - `MockRecallDetail` exists in OpenAPI and generated types, and one contract fixture exists for runtime smoke checks, but no persisted or storage-backed success flow exists.
 - The CSV endpoint has one fixture-derived output for the contract smoke check, but no production CSV generation workflow exists.
-- The exceptions PATCH endpoint is contracted and designed as the recommended first mutating write, but not implemented.
+- The exceptions PATCH endpoint is contracted and implemented only as the approved fixture-backed first mutating write.
 
 ## Testing Gap
 
 - There is one committed MockRecall contract smoke check.
 - Broader unit, integration, and end-to-end test coverage is absent.
-- Dormant 401/403, idempotency, audit, provider, and non-public tenant paths are not tested because they are not operational yet.
+- The fixture-only exception-review PATCH has focused direct tests for 401/403, tenant isolation, validation, idempotency replay/conflict, and in-memory audit append, but those tests are not part of the package/CI gate yet.
+- Production provider, durable idempotency, persisted audit, and non-public tenant paths are not operational yet.
 - Contracted but unimplemented routes have no runtime tests.
 
 ## Generated File Risk
@@ -50,7 +52,8 @@ focus: concerns
 
 ## Truth-Surface Drift
 
-- `README.md` still says Phase 3 implementation has not started; current source and planning truth are more precise: the boundary skeleton is implemented, while Phase 3 remains incomplete.
+- Older historical deltas and phase planning docs can still describe Batch 31/33 as gated because they predate Batch 34. Treat them as provenance, not current-state docs.
+- Current-state surfaces should say Phase 3 is started but incomplete: the boundary skeleton and fixture-only exception-review PATCH exist, while production providers and broader Phase 4-8 runtime work remain absent.
 - `.planning/HANDOFF.json` still names an older `codebase_map_commit`; the map documents now carry their own `last_mapped_commit` front matter for `47b3adb`.
 - `INTEL.md` is local-only and untracked; do not treat it as committed repo truth unless Matt explicitly asks.
 

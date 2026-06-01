@@ -2,10 +2,11 @@ export default function Page() {
   return (
     <main>
       <p>FSMA 204 Workflow Product</p>
-      <h1>Baseline scaffold ready.</h1>
+      <h1>Readiness scaffold in Phase 3.</h1>
       <p>
-        This repository is prepared for the first contract batch. No database,
-        auth, imports, exports, or runtime workflows have been added.
+        OpenAPI-first contract checks, MockRecall fixture routes, and a
+        fixture-only exception-review PATCH are in place. Production auth,
+        persistence, imports, exports, and CSV generation remain out of scope.
       </p>
     </main>
   );

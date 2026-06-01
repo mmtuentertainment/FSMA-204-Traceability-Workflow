@@ -53,4 +53,4 @@ focus: tech
 
 - There is no database, ORM, migration system, auth SDK, queue, storage SDK, email/webhook client, or external API client.
 - The Phase 3 boundary skeleton is provider-neutral TypeScript only: request context, authorization policy shape, tenant-scoped MockRecall source, read boundary, and idempotency/audit interface shapes.
-- Idempotency and audit interfaces are present but uninvoked by the current read-only routes.
+- The exception-review PATCH uses local/test fixture auth plus in-memory fixture idempotency and audit evidence only; production provider wiring, durable idempotency storage, and persisted audit remain absent.
