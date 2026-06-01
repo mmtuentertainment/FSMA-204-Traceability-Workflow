@@ -1,6 +1,6 @@
 ---
-last_mapped_commit: b106c66ac96b65ad47b658772886ffcd871c13f9
-mapped_at: 2026-05-28
+last_mapped_commit: 47b3adb8ba0224e2c30edf112661f77b4d69410c
+mapped_at: 2026-06-01
 focus: arch
 ---
 
@@ -8,8 +8,8 @@ focus: arch
 
 ## Top-Level Layout
 
-- `AGENTS.md` contains project instructions, product scope, batch discipline, and future API guardrails.
-- `README.md` describes the current stack, setup checks, and implementation absences.
+- `AGENTS.md` contains project instructions, product scope, batch discipline, Context7 rules, and future API guardrails.
+- `README.md` describes stack, setup checks, and current state, but it is currently behind the Phase 3 boundary-skeleton posture.
 - `PLAN.md` is a tracked baseline scaffold plan and should not be edited unless explicitly approved.
 - `package.json` and `package-lock.json` define the npm project and locked dependencies.
 - `tsconfig.json` defines TypeScript and Next settings.
@@ -25,27 +25,50 @@ focus: arch
 ## API And Library Directory
 
 - `api/openapi.yaml` is the authoritative API contract.
-- `lib/api/problem.ts` is the shared Problem Details response helper.
+- `lib/api/mock-recall.ts` owns the static MockRecall contract fixture and derives the fixture packet CSV.
+- `lib/api/mock-recall-source.ts` defines the tenant-scoped `MockRecallSource` seam and public-fixture adapter.
+- `lib/api/problem.ts` is the shared Problem Details response helper and catalog.
+- `lib/api/route-boundary.ts` is the read-route request boundary.
 - `lib/api/generated/openapi-types.ts` is generated from OpenAPI and should not be manually edited.
+
+## Security Directory
+
+- `lib/security/request-context.ts` defines server-owned request identity and the public fixture resolver.
+- `lib/security/authorization.ts` defines action-oriented authorization and the public fixture policy.
+- `lib/security/idempotency-audit.ts` defines future mutating-write idempotency and audit interfaces.
+
+## Test And CI Directory
+
+- `tests/mock-recall-contract-smoke.mjs` starts a production Next server and checks fixture detail, fixture CSV, and missing-resource Problem Details.
+- `.github/workflows/contract-gate.yml` runs the install, contract, typecheck, build, and smoke-test gate on push and pull request events.
 
 ## Operations Directory
 
 - `ops/memory/product.md` is concise product memory.
-- `ops/deltas/*.md` documents approved micro-batches and review-only evidence, including the Phase 1 pointer repair, MockRecall example review, and truth-surface wording reconciliation.
-- Delta files should continue to capture goal, files changed, verification, skipped scope, and recommended next batch.
+- `ops/deltas/*.md` documents approved micro-batches and review-only evidence.
+- Recent deltas include:
+  - `0027-mock-recall-record-source-of-truth.md`
+  - `0028-problem-details-catalog-structure.md`
+  - `0029-boundary-skeleton.md`
+  - `0030-provider-activation-hardening.md`
+  - `0031-phase-3-first-mutating-write-design.md`
 
 ## Planning Directory
 
 - `.planning/HANDOFF.json` is structured resume state.
-- `.planning/.continue-here.md` is the human-readable continuation note.
-- `.planning/codebase/` contains this generated codebase map.
+- `.planning/STATE.md` is the current project-state truth surface.
+- `.planning/codebase/` contains this refreshed codebase map.
+- `.planning/phases/FSMA-01-contract-gate-and-examples/` contains Phase 1 planning artifacts.
+- `.planning/phases/FSMA-02-problem-details-test-harness/` contains the Phase 2 verification scope.
+- `.planning/phases/FSMA-03-security-and-persistence-foundation/` contains Phase 3 kickoff, 03-01A boundary decision, and 03-02 first mutating-write design.
 
 ## Naming Conventions
 
 - API route folders follow Next.js dynamic segment naming, such as `[mockRecallId]`.
 - OpenAPI operation IDs use stable verb-noun names, such as `getMockRecall` and `downloadMockRecallPacketCsv`.
-- Operational deltas use zero-padded batch IDs, such as `0009-openapi-mock-recall-detail-success-shape.md`.
+- Operational deltas use zero-padded batch IDs, such as `0031-phase-3-first-mutating-write-design.md`.
 - Generated OpenAPI type names follow `openapi-typescript` output conventions: `paths`, `components`, and `operations`.
+- Security action names use dot-delimited action classes, such as `mock_recall.read`.
 
 ## Files To Treat Carefully
 
@@ -53,3 +76,4 @@ focus: arch
 - Do not expand `AGENTS.md` regulatory claims beyond readiness workflow, human review, and FDA-style sortable export.
 - Do not edit `PLAN.md` during unrelated batches.
 - Do not add runtime product logic, database, auth, tenant model, RBAC, audit logging, imports, exports, or CSV generation without an approved batch.
+- Keep `INTEL.md` local-only unless Matt explicitly asks otherwise.
