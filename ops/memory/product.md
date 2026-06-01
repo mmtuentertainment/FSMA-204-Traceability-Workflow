@@ -14,5 +14,6 @@
 - 03-01A documents a provider-neutral security/persistence boundary decision; Batch 29 implemented its boundary skeleton (request context, deny-by-default authorization, tenant-scoped MockRecallSource, Problem catalog, idempotency/audit shapes) as seams plus public-fixture default adapters only.
 - Batch 33 adds a docs-only approval packet for the first mutating-write activation candidate: exception-review PATCH only, still gated behind Matt's explicit Phase 4-8 Non-Goal lift and provider/auth/RBAC/tenant/idempotency/audit decisions.
 - Batch 34 implements that first write as fixture-only runtime: local/test bearer auth, server-derived fixture tenant, same-tenant reviewer RBAC, in-memory exception repository, idempotency replay/conflict, and append-only in-memory audit for `PATCH /api/traceability/exceptions/{exceptionId}` only.
+- Batch 35 records the production provider-selection direction without implementation: server-verified auth/session, server-derived tenant membership, tenant-scoped relational persistence, durable idempotency entries, and append-only audit evidence for the exception-review PATCH path.
 - `PLAN.md` is tracked in the current HEAD; do not edit it unless explicitly approved.
 - Next useful batch should be small, reversible, and consultant-approved.
