@@ -32,7 +32,8 @@
     "phase_1_closeout": ".planning/phases/FSMA-01-contract-gate-and-examples/CLOSEOUT.md",
     "phase_2_verification_scope": ".planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md",
     "phase_3_kickoff_plan": ".planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md",
-    "phase_3_03_01a_boundary_decision": ".planning/phases/FSMA-03-security-and-persistence-foundation/03-01A-boundary-decision.md"
+    "phase_3_03_01a_boundary_decision": ".planning/phases/FSMA-03-security-and-persistence-foundation/03-01A-boundary-decision.md",
+    "phase_3_03_02_first_mutating_write_design": ".planning/phases/FSMA-03-security-and-persistence-foundation/03-02-first-mutating-write-design.md"
   },
   "current_state": {
     "summary": [
@@ -78,7 +79,7 @@
   ],
   "next_recommended_actions": [
     {
-      "action": "Boundary skeleton (Batch 29) is implemented. The next approved batch is the first mutating-write path, which activates the idempotency and audit interfaces and a non-public resolver/policy and selects a persistence and auth provider.",
+      "action": "Boundary skeleton (Batch 29) is implemented. The next approved batch is the first mutating-write path, which activates the idempotency and audit interfaces and a non-public resolver/policy and selects a persistence and auth provider. That path is now designed (gated) in .planning/phases/FSMA-03-security-and-persistence-foundation/03-02-first-mutating-write-design.md (Batch 31); recommended first write is the exception-review PATCH, which requires an explicit Phase 4-8 Non-Goal lift before any code.",
       "status": "blocked_pending_approval"
     },
     {

@@ -32,6 +32,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 - Phase 2 verification scope: `.planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md`.
 - Phase 3 kickoff plan: `.planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md`.
 - Phase 3 03-01A boundary decision: `.planning/phases/FSMA-03-security-and-persistence-foundation/03-01A-boundary-decision.md`.
+- Phase 3 03-02 first mutating-write design: `.planning/phases/FSMA-03-security-and-persistence-foundation/03-02-first-mutating-write-design.md`.
 
 ## Recent Decisions
 
@@ -50,7 +51,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 
 ## Next Step
 
-The boundary skeleton (Batch 29) is in place. The next approved batch is the first mutating-write path, which activates the idempotency and audit interfaces and a non-public resolver/policy, and selects a persistence and auth provider. No provider, storage, or enforcement on non-public tenants exists yet, and the optional `@/*` path alias was deferred.
+The boundary skeleton (Batch 29) is in place. The next approved batch is the first mutating-write path, which activates the idempotency and audit interfaces and a non-public resolver/policy, and selects a persistence and auth provider. That path is now designed (gated) in `03-02-first-mutating-write-design.md` (Batch 31); the recommended first write is the exception-review PATCH, which requires an explicit Phase 4-8 Non-Goal lift before any code. No provider, storage, or enforcement on non-public tenants exists yet, and the optional `@/*` path alias was deferred.
 
 ## Guardrails
 
