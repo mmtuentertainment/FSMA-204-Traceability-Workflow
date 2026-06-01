@@ -8,7 +8,10 @@ import type { RequestContext } from "./request-context";
 // Action classes authorized before a tenant-scoped load. Anything a policy does not
 // explicitly allow is denied. Future write/review/supplier/export/admin actions
 // extend this union.
-export type Action = "mock_recall.read" | "mock_recall.packet.read";
+export type Action =
+  | "mock_recall.read"
+  | "mock_recall.packet.read"
+  | "exception.review.update";
 
 export type AuthorizationDecision =
   | { allowed: true }
@@ -29,6 +32,22 @@ const PUBLIC_ALLOWED: ReadonlySet<Action> = new Set<Action>([
 export const publicFixturePolicy: AuthorizationPolicy = {
   authorize(_ctx: RequestContext, action: Action): AuthorizationDecision {
     return PUBLIC_ALLOWED.has(action)
+      ? { allowed: true }
+      : { allowed: false, reason: "forbidden" };
+  },
+};
+
+export const fixtureExceptionReviewPolicy: AuthorizationPolicy = {
+  authorize(ctx: RequestContext, action: Action): AuthorizationDecision {
+    if (ctx.authState !== "authenticated") {
+      return { allowed: false, reason: "unauthenticated" };
+    }
+
+    if (action !== "exception.review.update") {
+      return { allowed: false, reason: "forbidden" };
+    }
+
+    return ctx.principal.roles?.includes("reviewer")
       ? { allowed: true }
       : { allowed: false, reason: "forbidden" };
   },

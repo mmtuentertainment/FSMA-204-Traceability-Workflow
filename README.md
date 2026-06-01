@@ -16,8 +16,9 @@ Conservative FSMA 204 traceability readiness workflow. This product should help 
 - Mock-recall detail and packet routes include one OpenAPI-declared contract fixture plus `application/problem+json` not-found behavior for unknown mock recalls.
 - MockRecall OpenAPI examples were reviewed against the fixture and missing-resource behavior; no OpenAPI repair was needed.
 - The fixture is for contract/runtime smoke checks only; no persisted mock-recall records or production CSV generation workflow exists yet.
-- No database, auth, tenant model, RBAC, audit log, persisted traceability records, imports, exports, or production workflow implementation exists yet.
-- Phase 1 and Phase 2 are complete. Phase 3 kickoff planning exists at `.planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md`; implementation has not started and requires explicit approval.
+- `PATCH /api/traceability/exceptions/{exceptionId}` has the first approved fixture-backed mutating write: local/test fixture auth, server-derived fixture tenant identity, deny-by-default reviewer RBAC, an in-memory fixture exception repository, idempotency replay/conflict handling, and append-only in-memory fixture audit evidence.
+- No database, production auth provider, production tenant model, production RBAC provider, persisted audit log, persisted traceability records, imports, exports, supplier workflow, lot/event workflow, or production CSV generation exists yet.
+- Phase 1 and Phase 2 are complete. Phase 3 has started but is not complete; the approved activation remains limited to the exception-review PATCH only.
 
 ## Setup and Checks
 
