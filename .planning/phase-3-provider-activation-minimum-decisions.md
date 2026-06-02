@@ -23,6 +23,12 @@ Anything not settled below stays gated until Matt approves a concrete code-beari
 
 The current `PATCH /api/traceability/exceptions/{exceptionId}` remains fixture-only. It still uses local/test fixture bearer auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, an in-memory fixture exception repository, in-memory idempotency replay/conflict handling, and append-only in-memory audit evidence. This packet does not change that behavior, does not enable any non-public resolver or policy, and does not activate the route.
 
+## PR #12 Disposition
+
+PR #12 (Batches 44-48) is accepted as a docs/planning foundation, not as route-wiring or runtime-activation approval. An external review of the stack raised valid runtime, persistence, and security concerns. Those concerns are factually accurate, but they are calibrated for the future route-wiring batch, not for this packet: the exception-review PATCH remains fixture-only, the `lib/db/client.ts` seam has no route caller and is never instantiated without `DATABASE_URL`, and this packet records no runtime behavior. The raised items are therefore future code gates, not defects in current code.
+
+The review-reconciliation tightenings recorded below (Batch 49) promote those concerns into explicit pre-code decision text. They add planning constraints only: no runtime, OpenAPI, generated-type, dependency, package-script, or CI change. Runtime hardening and any schema or contract change remain gated until Matt approves a concrete code-bearing micro-batch.
+
 ## Minimum Decisions Required Before Code
 
 ### 1. Auth source
@@ -98,6 +104,83 @@ Source of record: Batch 45 (Rollback Expectation For Later Code), and the establ
 
 Pre-code gate: all nine decisions are settled at the minimum level above, and the future implementation may proceed only after Matt approves a concrete code-bearing micro-batch (exact allowed files, dependency changes, migration scope, validation commands, rollout path, and rollback path) and provider-backed service/repository tests pass before route success activation.
 
+## Pre-Code Tightenings (Review Reconciliation, Batch 49)
+
+These tightenings refine the nine decisions above with the minimum constraints the future code batch must honor. They are planning text only and change no runtime, contract, dependency, package, or CI artifact. Each must be satisfied before the corresponding code-bearing batch activates the route.
+
+### T1. Atomic transaction contract (refines Decisions 4, 5, 6)
+
+Required: no accepted exception-review state transition may commit unless the tenant-scoped exception update, the `audit_events` insert, and the `idempotency_records` completion/replay snapshot commit in the same PostgreSQL transaction. On rollback, none of those three effects may persist.
+
+This promotes the previously "consistent enough" / "preferably in the same transaction" direction to an explicit requirement. Only the concrete lock strategy and failure-release timing remain gated (see T2).
+
+### T2. Idempotency concurrency protocol (refines Decision 5)
+
+The future implementation must use this protocol:
+
+1. Compute a canonical request hash from the normalized request body and operation context.
+2. Reserve with `INSERT ... ON CONFLICT DO NOTHING` so concurrent identical requests cannot both reserve.
+3. On conflict, `SELECT ... FOR UPDATE` the existing idempotency row and branch on state plus hash:
+   - completed and matching hash: replay the stored response snapshot;
+   - reserved (in-flight) and matching hash: return a declared Problem Details response, default `409` unless the OpenAPI contract is first changed to add a wait or `425` semantic;
+   - any state with mismatched hash: `409 Conflict` Problem Details.
+4. Expired `reserved` rows are reclaimable: a single transaction may reclaim and re-reserve an expired row. Cleanup must never delete `completed` idempotency replay snapshots or any `audit_events` evidence before a defined retention window.
+
+Advisory locks are not the default; row reservation plus row locks are.
+
+### T3. Idempotency resource scope - seam versus table mismatch (refines Decision 5; gated schema decision)
+
+Current state: the runtime seam `lib/security/idempotency-audit.ts` carries a resource-scoped `IdempotencyScope` / `scopeKey` (it includes `resourceRef`), but the persisted `idempotency_records` table scopes uniqueness only by `tenant_id + operation + idempotency_key` and has no `resource_type` / `resource_id` column. If `operation` is a bare action name, the same `Idempotency-Key` reused across two exception IDs collides at the persistence layer.
+
+Required before route wiring: the code batch must close this drift by either (a) encoding concrete resource identity into `operation`, or (b) adding explicit `resource_type` / `resource_id` columns to `idempotency_records` and including them in the uniqueness rule. Aligning the table to the already-resource-scoped seam (option b) is preferred. The DDL itself is a gated schema/migration change.
+
+### T4. Redaction and data minimization (refines Decisions 5, 6)
+
+When the code batch populates the free `jsonb` columns it must apply an allowlist:
+
+- `idempotency_records.replay_headers`: allowlisted headers only; strip `Authorization`, `Cookie`, `Set-Cookie`, and any secret-bearing header.
+- `idempotency_records.replay_body`: only the idempotent API response needed for replay.
+- `audit_events.metadata`: only the enumerated structured fields (identifiers, state-transition fields, sanitized reason codes, `source_document_ref`-style references).
+- Never store raw uploaded documents, raw request bodies, `DATABASE_URL`, other secrets, or unnecessary personal data in any column or log.
+
+This makes explicit the allowlist already implied by the enumerated audit and replay field lists in Decisions 5 and 6, and preserves the invariant that free-form notes must not become the only evidence trail.
+
+### T5. Auth mechanism and CSRF (refines Decision 1; gated contract decision)
+
+The contract currently declares a bearer placeholder scheme only (`api/openapi.yaml`), while Decision 1 selects Auth.js database-backed sessions. This mechanism choice must be resolved in an OpenAPI-first contract batch before implementation: either keep the API bearer-based with Auth.js mediating to a server-side bearer/JWT, or document a cookie scheme (`apiKey` in cookie).
+
+If cookie-backed sessions are chosen, the future batch must name CSRF controls before code: `SameSite` plus `Secure` plus `HttpOnly` session cookies, same-origin `Origin` / `Host` validation, a custom CSRF header or double-submit token on unsafe methods (PATCH), rejection of CSRF-simple content types for JSON, and CORS credentials disabled unless explicitly allowlisted.
+
+### T6. DB connection and defense-in-depth hardening (refines Decision 4)
+
+The future code batch that first instantiates `lib/db/client.ts` against a live `DATABASE_URL` must decide and set:
+
+- a TLS policy for production connections (never a blanket `rejectUnauthorized: false`);
+- a bounded pool `max`, a nonzero `connectionTimeoutMillis`, an explicit `idleTimeoutMillis`, and an optional max lifetime;
+- session timeouts (`statement_timeout`, `lock_timeout`, `idle_in_transaction_session_timeout`) appropriate to `SELECT ... FOR UPDATE` idempotency work;
+- a pool-level error handler (`pool.on("error", ...)`) that logs a sanitized, credential-free event;
+- the serverless / Fluid Compute connection posture (pooled connections, a provider pooler in front where applicable);
+- a least-privilege runtime DB role distinct from the migration owner;
+- DB-level append-only enforcement for `audit_events` (an UPDATE/DELETE-rejecting trigger or an INSERT/SELECT-only app role) rather than app-layer convention alone;
+- optional Row-Level Security as defense-in-depth, never the sole tenant boundary; tenant-scoped repository methods remain the primary invariant.
+
+### T7. Rate limiting, input limits, migration policy, observability (refines Decisions 7, 8)
+
+- Rate limiting: the fixed-window limiter (already scoped by tenant, actor, operation, and window, already returning `429` with `Retry-After`) carries a boundary-burst weakness (up to roughly twice the nominal rate across a window edge); document this and note that an edge or gateway limiter may supplement it later. Expired-window cleanup rides with the gated tuning and retention decision.
+- Input limits: define a JSON body-size cap, a `review_notes` maximum length, and unknown-field / `additionalProperties` rejection behavior, all surfaced as `422`. The corresponding `api/openapi.yaml` changes are a gated contract-batch edit, not part of this docs batch.
+- Migration policy: migrations are forward-only with a forward-repair narrative; destructive rollback is not the model.
+- Observability: structured logs must carry `requestId` and tenant/resource identifiers, map DB errors to RFC 9457 Problem Details, and never log secrets, `DATABASE_URL`, or personal data.
+
+### T8. First-slice persistence reconciliation (refines Decision 4 and the checklist)
+
+Decision 4 and the Decision Readiness Checklist list "rate-limit state" as part of the first persistence slice, and Decision 6 lists "prior state" and "next state" on each audit event, but the committed scaffold has no `rate_limit` table and `audit_events` carries prior and next state only inside the `metadata` `jsonb` column. Treat both as gated: any `rate_limit` table and any dedicated prior/next-state columns are schema/migration work for the future code batch, not existing first-slice persistence.
+
+### T9. Verification scope and scaffold non-enforcement (refines Decision 4)
+
+`npm run db:check` verifies only Drizzle migration journal/snapshot consistency (`drizzle-kit check`) plus `lib/db/client.ts` import safety. It does not prove live database connectivity, `lib/db/schema.ts`-versus-migration drift, DB-level tenant isolation, or DB-level append-only enforcement. Schema-drift detection (for example a `drizzle-kit generate --check` step) is a gated CI/code-batch addition.
+
+The current schema/migration foundation does not by itself enforce append-only `audit_events` or tenant isolation at the database level; those remain repository/app-layer promises until a later DB-enforcement batch lands triggers, roles, or RLS.
+
 ## What This Packet Does NOT Do
 
 - No runtime route implementation or activation; the exception-review PATCH stays fixture-only.
@@ -114,6 +197,8 @@ Pre-code gate: all nine decisions are settled at the minimum level above, and th
 The docs-only baseline gate must continue to pass unchanged:
 
 `npm ci`, `npm run api:check`, `npm run db:check`, `npm run typecheck`, `npm run build`, `npm run test:mock-recall:contract`, `npm run test:exception-review:patch`, `git diff --check`, and `git diff --cached --check`.
+
+`npm run db:check` in this gate verifies only Drizzle migration journal/snapshot consistency plus `lib/db/client.ts` import safety; it does not prove live database connectivity, schema-versus-migration drift, DB-level tenant isolation, or DB-level append-only enforcement (see T9). The docs-only tightenings in this batch add no runtime, contract, dependency, package, or CI artifact, so the gate result is unchanged by them.
 
 ## Next Step
 
