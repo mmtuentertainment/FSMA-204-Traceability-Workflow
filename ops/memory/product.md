@@ -20,6 +20,7 @@
 - Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation for tenant memberships, traceability exceptions, idempotency records, and append-only audit events without runtime route wiring or a live database provider.
 - Batch 44 adds `db:check` to the CI contract gate without runtime, schema, migration, package, or API changes.
 - Batch 45 records a docs-only approval packet for future exception-review PATCH provider activation; current runtime remains fixture-only.
+- Batch 46 adds a lazy PostgreSQL runtime client seam for future Drizzle repositories; no route wiring or PATCH activation exists.
 - Batch 37 wires the existing fixture-only exception-review PATCH focused test into package scripts and the CI contract gate without changing runtime behavior.
 - `PLAN.md` is tracked in the current HEAD; do not edit it unless explicitly approved.
-- Next useful code batch should be small, reversible, explicitly approved, and limited to provider-backed service/repository tests plus narrow route-service-repository wiring before production-like route activation.
+- Next useful code batch should be small, reversible, explicitly approved, and limited to provider-backed repository/service tests before production-like route activation.
