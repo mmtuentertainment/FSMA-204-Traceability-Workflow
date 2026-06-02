@@ -1,10 +1,10 @@
 {
-  "version": "1.5",
-  "timestamp": "2026-06-01T20:18:00-04:00",
+  "version": "1.8",
+  "timestamp": "2026-06-02T10:28:47-04:00",
   "phase": 3,
   "phase_name": "Security And Persistence Foundation",
   "phase_dir": ".planning/phases/FSMA-03-security-and-persistence-foundation",
-  "status": "phase_3_exception_review_patch_fixture_test_gate_wired",
+  "status": "phase_3_postgres_drizzle_foundation_added",
   "repo": {
     "path": "C:\\Users\\matth\\Desktop\\FSMA 204 Workflow Product",
     "branch": "main",
@@ -35,7 +35,11 @@
     "phase_3_03_01a_boundary_decision": ".planning/phases/FSMA-03-security-and-persistence-foundation/03-01A-boundary-decision.md",
     "phase_3_03_02_first_mutating_write_design": ".planning/phases/FSMA-03-security-and-persistence-foundation/03-02-first-mutating-write-design.md",
     "phase_3_exception_review_patch_activation_approval": ".planning/phase-3-exception-review-patch-activation-approval.md",
-    "phase_3_production_provider_selection": ".planning/phase-3-production-provider-selection.md"
+    "phase_3_production_provider_selection": ".planning/phase-3-production-provider-selection.md",
+    "phase_3_provider_decision_gap_audit": ".planning/phase-3-provider-decision-gap-audit.md",
+    "phase_3_provider_activation_decisions": ".planning/phase-3-provider-activation-decisions.md",
+    "phase_3_exception_review_patch_activation_scope": ".planning/phase-3-exception-review-patch-activation-scope.md",
+    "batch_43_postgres_drizzle_foundation": "ops/deltas/0043-postgres-drizzle-foundation.md"
   },
   "current_state": {
     "summary": [
@@ -51,7 +55,11 @@
       "Batch 29 implemented the approved boundary skeleton (Variant A): the two MockRecall read routes flow through server-derived request context, deny-by-default authorization, a tenant-scoped MockRecallSource, and the Problem catalog, with idempotency/audit as interface shapes for future writes and byte-identical read behavior.",
       "Batch 34 implemented the first approved mutating write for exception-review PATCH only, using local/test fixture auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, an in-memory fixture exception repository, idempotency replay/conflict handling, and append-only in-memory audit evidence.",
       "Batch 35 recorded the docs-only production provider-selection direction for the exception-review PATCH path: server-verified auth/session, server-derived tenant membership, tenant-scoped relational persistence, durable idempotency entries, and append-only audit evidence.",
-      "Batch 37 wires the existing fixture-only exception-review PATCH focused test into package scripts and the CI contract gate without changing runtime behavior."
+      "Batch 37 wires the existing fixture-only exception-review PATCH focused test into package scripts and the CI contract gate without changing runtime behavior.",
+      "Batch 40 audited the remaining provider decision gaps after PR #10 without changing runtime behavior.",
+      "Batch 41 records default provider activation decisions for the future exception-review PATCH path: Auth.js database-backed sessions, application-owned PostgreSQL tenant_memberships, tenant_admin/quality_reviewer/read_only roles, PostgreSQL plus Drizzle, durable idempotency replay snapshots, append-only audit_events, a PostgreSQL fixed-window limiter, and provider-backed tests before route success activation.",
+      "Batch 42 explicitly lifts the Phase 4-8 non-goal only for future production-like exception-review PATCH implementation, while excluding lot/event workflow, supplier KDE workflow, mock recall readiness computation, production CSV, imports, dashboards, supplier portal, and broader workflow work.",
+      "Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation for tenant_memberships, traceability_exceptions, idempotency_records, and append-only audit_events without wiring a runtime database provider or changing route behavior."
     ],
     "openapi_source_of_truth": "api/openapi.yaml",
     "generated_contract_types": "lib/api/generated/openapi-types.ts",
@@ -67,17 +75,17 @@
     "phase_2_verification_scope_doc": ".planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md",
     "phase_3_goal": "Establish the approved security and persistence foundation for server-derived tenant context, auth/RBAC boundaries, idempotency, persistence shape, and append-only audit evidence before production-like traceability data workflows.",
     "phase_3_kickoff_plan": ".planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md",
-    "phase_3_status": "Boundary skeleton implemented in Batch 29 (Variant A), and the first approved mutating write is implemented in Batch 34 for PATCH /api/traceability/exceptions/{exceptionId} only. The write uses local/test fixture auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, in-memory fixture repository state, idempotency replay/conflict handling, and append-only in-memory audit evidence. Batch 37 wires its existing focused fixture test into the official local/CI gate. Phase 3 is not complete; production auth, database persistence, production RBAC, and broader workflows remain absent.",
+    "phase_3_status": "Boundary skeleton implemented in Batch 29 (Variant A), and the first approved mutating write is implemented in Batch 34 for PATCH /api/traceability/exceptions/{exceptionId} only. The write uses local/test fixture auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, in-memory fixture repository state, idempotency replay/conflict handling, and append-only in-memory audit evidence. Batch 41 records default future provider decisions, Batch 42 lifts the Phase 4-8 non-goal only for future exception-review PATCH implementation, and Batch 43 adds a PostgreSQL plus Drizzle schema/migration foundation. Phase 3 is not complete; production auth, runtime database persistence, production RBAC, durable idempotency enforcement, persisted audit enforcement, rate limiting, and broader workflows remain absent.",
     "phase_3_boundary_skeleton": "lib/security/request-context.ts, lib/security/authorization.ts, lib/api/mock-recall-source.ts, lib/api/route-boundary.ts, and lib/security/idempotency-audit.ts; problem.ts gained 401/403 catalog entries; both app route handlers call handleReadAction. Documented in ops/deltas/0029-boundary-skeleton.md.",
     "phase_3_03_01a_boundary_decision": "Server-derived tenant identity, request-boundary auth, deny-by-default action RBAC, tenant-scoped persistence, and paired idempotency/audit boundaries are the high-level model for future approved implementation."
   },
   "remaining_absences": [
-    "No database.",
+    "No live database connection or runtime database provider.",
     "No production authentication provider; exception-review PATCH uses local/test fixture bearer auth only.",
-    "No persisted tenant model; tenants are server-derived fixture values only.",
+    "No runtime tenant provider; the Drizzle tenant_memberships schema exists but tenants are still server-derived fixture values only.",
     "No production RBAC provider; exception-review PATCH enforces the same-tenant fixture reviewer role only.",
-    "No persisted audit log; exception-review PATCH appends in-memory fixture audit events only.",
-    "No persisted traceability records; exception-review PATCH mutates a deterministic in-memory fixture exception only.",
+    "No runtime persisted audit log; the Drizzle audit_events schema exists but exception-review PATCH appends in-memory fixture audit events only.",
+    "No runtime persisted traceability records; the Drizzle traceability_exceptions schema exists but exception-review PATCH mutates a deterministic in-memory fixture exception only.",
     "No persisted or storage-backed mock-recall runtime payloads beyond the contract smoke fixture.",
     "No production CSV generation.",
     "No imports or production exports.",
@@ -85,16 +93,16 @@
   ],
   "next_recommended_actions": [
     {
-      "action": "The first approved mutating write is implemented as a fixture-only PATCH /api/traceability/exceptions/{exceptionId}, and the production provider-selection direction is documented in .planning/phase-3-production-provider-selection.md. The next smallest implementation candidate is a provider-adapter spike for that PATCH path only after Matt selects concrete provider details.",
+      "action": "The first approved mutating write is implemented as a fixture-only PATCH /api/traceability/exceptions/{exceptionId}. Batch 41 records default future provider decisions, Batch 42 limits the Phase 4-8 non-goal lift to that future write only, and Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation. The next smallest implementation candidate is provider-backed service/repository tests after Matt approves exact code scope.",
       "status": "ready_for_next_approval"
     },
     {
-      "action": "Do not begin auth/persistence provider selection, storage, enforcement on non-public tenants, runtime success expansion, or production CSV work until Matt approves a concrete micro-batch.",
+      "action": "Do not begin provider implementation, storage, enforcement on non-public tenants, runtime success expansion, or production CSV work until Matt approves a concrete code-bearing micro-batch.",
       "status": "blocked_pending_approval"
     }
   ],
   "blockers": [],
   "critical_do_not_expand_without_approval": [
-    "Database, storage, auth, RBAC, middleware, audit log, route success behavior, generated types, package files, tests, fixtures, imports, exports, CSV generation, UI, supplier portal, OCR, ERP integration, and runtime traceability logic unless covered by the approved phase plan."
+    "Runtime database wiring, storage providers, auth, RBAC, middleware, audit log enforcement, route success behavior, generated types, package files, tests, fixtures, imports, exports, CSV generation, UI, supplier portal, OCR, ERP integration, and runtime traceability logic unless covered by the approved phase plan."
   ]
 }
