@@ -36,3 +36,6 @@ jobs:
 
       - name: Check MockRecall contract smoke
         run: npm run test:mock-recall:contract
+
+      - name: Check exception-review PATCH focused test
+        run: npm run test:exception-review:patch

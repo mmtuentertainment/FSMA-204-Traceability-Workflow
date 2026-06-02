@@ -18,10 +18,10 @@
 ## Batch Discipline
 
 - Keep work in small approved batches and document each batch in `ops/deltas/`.
-- Use the existing local/CI gate as the baseline: `npm ci`, `npm run api:check`, `npm run typecheck`, `npm run build`, and `npm run test:mock-recall:contract`.
+- Use the existing local/CI gate as the baseline: `npm ci`, `npm run api:check`, `npm run typecheck`, `npm run build`, `npm run test:mock-recall:contract`, and `npm run test:exception-review:patch`.
 - Do not install dependencies or create generated artifacts unless the batch explicitly permits it.
 - Do not leave `.next/`, `node_modules/`, `next-env.d.ts`, lockfiles, or other generated outputs in the working tree without an approved `.gitignore` plan.
-- Before edits, verify the repository path, `git status --short`, `git remote -v`, `node -v`, and `npm -v`; Node.js must be >= 20.9.
+- Before edits, verify the repository path, `git status --short`, `git remote -v`, `node -v`, and `npm -v`; Node.js must be >= 22.6 for the fixture-only exception-review PATCH type-stripping test gate.
 
 ## Future API Guardrails
 

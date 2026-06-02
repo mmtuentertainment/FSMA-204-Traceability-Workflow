@@ -7,7 +7,7 @@ Conservative FSMA 204 traceability readiness workflow. This product should help 
 - Next.js App Router
 - TypeScript
 - npm
-- Node.js >= 20.9
+- Node.js >= 22.6
 
 ## Current State
 
@@ -28,6 +28,8 @@ npm run api:check
 npm run typecheck
 npm run build
 npm run test:mock-recall:contract
+npm run test:exception-review:patch
 ```
 
 `npm run api:check` wraps the component contract commands `npm run api:lint` and `npm run api:types:check`.
+`npm run test:exception-review:patch` runs the fixture-only exception-review PATCH focused test with Node's built-in type stripping. Node may print the current experimental type-stripping and module-type warnings; those warnings are expected for this no-test-runner fixture gate.

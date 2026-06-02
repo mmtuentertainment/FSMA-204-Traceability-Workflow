@@ -1,10 +1,10 @@
 {
   "version": "1.5",
-  "timestamp": "2026-06-01T03:20:00-04:00",
+  "timestamp": "2026-06-01T20:18:00-04:00",
   "phase": 3,
   "phase_name": "Security And Persistence Foundation",
   "phase_dir": ".planning/phases/FSMA-03-security-and-persistence-foundation",
-  "status": "phase_3_exception_review_patch_fixture_activation_implemented",
+  "status": "phase_3_exception_review_patch_fixture_test_gate_wired",
   "repo": {
     "path": "C:\\Users\\matth\\Desktop\\FSMA 204 Workflow Product",
     "branch": "main",
@@ -50,12 +50,14 @@
       "Batch 28 reshaped Problem Details into a named catalog seam with a notFound entry (byte-identical).",
       "Batch 29 implemented the approved boundary skeleton (Variant A): the two MockRecall read routes flow through server-derived request context, deny-by-default authorization, a tenant-scoped MockRecallSource, and the Problem catalog, with idempotency/audit as interface shapes for future writes and byte-identical read behavior.",
       "Batch 34 implemented the first approved mutating write for exception-review PATCH only, using local/test fixture auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, an in-memory fixture exception repository, idempotency replay/conflict handling, and append-only in-memory audit evidence.",
-      "Batch 35 recorded the docs-only production provider-selection direction for the exception-review PATCH path: server-verified auth/session, server-derived tenant membership, tenant-scoped relational persistence, durable idempotency entries, and append-only audit evidence."
+      "Batch 35 recorded the docs-only production provider-selection direction for the exception-review PATCH path: server-verified auth/session, server-derived tenant membership, tenant-scoped relational persistence, durable idempotency entries, and append-only audit evidence.",
+      "Batch 37 wires the existing fixture-only exception-review PATCH focused test into package scripts and the CI contract gate without changing runtime behavior."
     ],
     "openapi_source_of_truth": "api/openapi.yaml",
     "generated_contract_types": "lib/api/generated/openapi-types.ts",
-    "ci_contract_gate": ".github/workflows/contract-gate.yml runs npm ci, npm run api:check, npm run typecheck, npm run build, and npm run test:mock-recall:contract on push and pull request events.",
+    "ci_contract_gate": ".github/workflows/contract-gate.yml runs npm ci, npm run api:check, npm run typecheck, npm run build, npm run test:mock-recall:contract, and npm run test:exception-review:patch on push and pull request events.",
     "mock_recall_contract_smoke": "tests/mock-recall-contract-smoke.mjs verifies the current contract fixture and missing-resource Problem Details behavior against a production Next server.",
+    "exception_review_patch_focused_test": "tests/exception-review-patch.test.ts verifies the fixture-only exception-review PATCH path directly through npm run test:exception-review:patch. The script uses Node built-in type stripping and may print the current experimental type-stripping and module-type warnings.",
     "mock_recall_examples_review": "Batch 21 found the MockRecall detail, packet CSV, and 404 Problem Details examples aligned with runtime fixture intent; api/openapi.yaml was unchanged.",
     "mock_recall_not_found_handlers": "Runtime verified in Batch 8 and protected by the committed MockRecall contract smoke check.",
     "mock_recall_detail_success_shape": "One contract fixture exists for runtime smoke checks; no persisted or storage-backed success flow exists yet.",
@@ -65,7 +67,7 @@
     "phase_2_verification_scope_doc": ".planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md",
     "phase_3_goal": "Establish the approved security and persistence foundation for server-derived tenant context, auth/RBAC boundaries, idempotency, persistence shape, and append-only audit evidence before production-like traceability data workflows.",
     "phase_3_kickoff_plan": ".planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md",
-    "phase_3_status": "Boundary skeleton implemented in Batch 29 (Variant A), and the first approved mutating write is implemented in Batch 34 for PATCH /api/traceability/exceptions/{exceptionId} only. The write uses local/test fixture auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, in-memory fixture repository state, idempotency replay/conflict handling, and append-only in-memory audit evidence. Phase 3 is not complete; production auth, database persistence, production RBAC, and broader workflows remain absent.",
+    "phase_3_status": "Boundary skeleton implemented in Batch 29 (Variant A), and the first approved mutating write is implemented in Batch 34 for PATCH /api/traceability/exceptions/{exceptionId} only. The write uses local/test fixture auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, in-memory fixture repository state, idempotency replay/conflict handling, and append-only in-memory audit evidence. Batch 37 wires its existing focused fixture test into the official local/CI gate. Phase 3 is not complete; production auth, database persistence, production RBAC, and broader workflows remain absent.",
     "phase_3_boundary_skeleton": "lib/security/request-context.ts, lib/security/authorization.ts, lib/api/mock-recall-source.ts, lib/api/route-boundary.ts, and lib/security/idempotency-audit.ts; problem.ts gained 401/403 catalog entries; both app route handlers call handleReadAction. Documented in ops/deltas/0029-boundary-skeleton.md.",
     "phase_3_03_01a_boundary_decision": "Server-derived tenant identity, request-boundary auth, deny-by-default action RBAC, tenant-scoped persistence, and paired idempotency/audit boundaries are the high-level model for future approved implementation."
   },
