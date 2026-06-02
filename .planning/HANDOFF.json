@@ -1,10 +1,10 @@
 {
-  "version": "2.2",
-  "timestamp": "2026-06-02T13:23:38-04:00",
+  "version": "2.3",
+  "timestamp": "2026-06-02T14:17:46-04:00",
   "phase": 3,
   "phase_name": "Security And Persistence Foundation",
   "phase_dir": ".planning/phases/FSMA-03-security-and-persistence-foundation",
-  "status": "phase_3_db_client_import_guardrail_added",
+  "status": "phase_3_provider_activation_minimum_decision_packet_added",
   "repo": {
     "path": "C:\\Users\\matth\\Desktop\\FSMA 204 Workflow Product",
     "branch": "main",
@@ -44,7 +44,9 @@
     "phase_3_exception_review_patch_activation": ".planning/phase-3-exception-review-patch-activation.md",
     "batch_45_exception_review_patch_activation_approval": "ops/deltas/0045-exception-review-patch-activation-approval.md",
     "batch_46_postgres_runtime_client_seam": "ops/deltas/0046-postgres-runtime-client-seam.md",
-    "batch_47_db_client_import_safety_gate": "ops/deltas/0047-db-client-import-safety-gate.md"
+    "batch_47_db_client_import_safety_gate": "ops/deltas/0047-db-client-import-safety-gate.md",
+    "phase_3_provider_activation_minimum_decisions": ".planning/phase-3-provider-activation-minimum-decisions.md",
+    "batch_48_provider_activation_minimum_decision_packet": "ops/deltas/0048-provider-activation-minimum-decision-packet.md"
   },
   "current_state": {
     "summary": [
@@ -68,7 +70,8 @@
       "Batch 44 adds npm run db:check to the CI contract gate so Drizzle schema/migration metadata is protected without runtime, schema, migration, or package changes.",
       "Batch 45 records the docs-only approval packet for the future exception-review PATCH provider implementation, including the one-write Phase 4-8 non-goal lift, guardrails, implementation mode, acceptance criteria, and non-activation statement.",
       "Batch 46 adds the lazy PostgreSQL runtime client seam for future Drizzle repositories and an import-only check proving it does not require DATABASE_URL until requested, without route wiring or PATCH activation.",
-      "Batch 47 makes the DB client import-safety check reachable through npm run db:check, which is already part of the CI contract gate, without changing runtime behavior or requiring DATABASE_URL."
+      "Batch 47 makes the DB client import-safety check reachable through npm run db:check, which is already part of the CI contract gate, without changing runtime behavior or requiring DATABASE_URL.",
+      "Batch 48 adds a docs-only provider-activation minimum-decision approval packet that consolidates the nine required pre-code decisions for the future exception-review PATCH (auth source, server-derived tenant identity, RBAC decision point, Postgres persistence boundary, idempotency storage, append-only audit evidence, Problem Details, 429 Retry-After, and rollback path) without changing runtime, API, generated type, schema, migration, persistence, dependency, or CI behavior."
     ],
     "openapi_source_of_truth": "api/openapi.yaml",
     "generated_contract_types": "lib/api/generated/openapi-types.ts",

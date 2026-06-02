@@ -23,5 +23,6 @@
 - Batch 46 adds a lazy PostgreSQL runtime client seam for future Drizzle repositories; no route wiring or PATCH activation exists.
 - Batch 47 adds the DB client import-safety test to `npm run db:check`; CI already runs that aggregate, so no workflow change was needed.
 - Batch 37 wires the existing fixture-only exception-review PATCH focused test into package scripts and the CI contract gate without changing runtime behavior.
+- Batch 48 adds a docs-only provider-activation minimum-decision approval packet that consolidates the nine required pre-code decisions (auth source, server-derived tenant identity, RBAC decision point, Postgres persistence boundary, idempotency storage, append-only audit evidence, Problem Details, 429 `Retry-After`, and rollback path) for the future exception-review PATCH; runtime remains fixture-only and no route is activated.
 - `PLAN.md` is tracked in the current HEAD; do not edit it unless explicitly approved.
 - Next useful code batch should be small, reversible, explicitly approved, and limited to provider-backed repository/service tests before production-like route activation.
