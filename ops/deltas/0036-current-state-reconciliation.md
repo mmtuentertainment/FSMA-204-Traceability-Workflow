@@ -28,7 +28,7 @@ Historical deltas remain intact. Older planning packets can still describe earli
 - `ops/memory/product.md`
 - `ops/deltas/0036-current-state-reconciliation.md`
 
-`README.md`, `.planning/HANDOFF.json`, `ops/deltas/0033-phase-3-exception-review-patch-activation-approval.md`, `ops/deltas/0034-exception-review-patch-fixture-activation.md`, and `.planning/phase-3-production-provider-selection.md` were read for source-of-truth context and did not need edits in this batch.
+`README.md`, `ops/deltas/0033-phase-3-exception-review-patch-activation-approval.md`, `ops/deltas/0034-exception-review-patch-fixture-activation.md`, and `.planning/phase-3-production-provider-selection.md` were read for source-of-truth context and did not need edits in this batch.
 
 `INTEL.md` and `.audit/` remain local-only/untracked and were not staged.
 

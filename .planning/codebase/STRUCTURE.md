@@ -42,7 +42,7 @@ focus: arch
 ## Test And CI Directory
 
 - `tests/mock-recall-contract-smoke.mjs` starts a production Next server and checks fixture detail, fixture CSV, and missing-resource Problem Details.
-- `tests/exception-review-patch.test.ts` directly exercises the fixture-only exception-review PATCH path; it is not wired into package scripts or CI in this batch.
+- `tests/exception-review-patch.test.ts` directly exercises the fixture-only exception-review PATCH path and is wired into the package/CI gate through `npm run test:exception-review:patch`.
 - `.github/workflows/contract-gate.yml` runs the install, contract, typecheck, build, and smoke-test gate on push and pull request events.
 
 ## Operations Directory

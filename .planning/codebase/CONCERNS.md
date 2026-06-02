@@ -32,7 +32,8 @@ focus: concerns
 
 - There is one committed MockRecall contract smoke check.
 - Broader unit, integration, and end-to-end test coverage is absent.
-- The fixture-only exception-review PATCH has focused direct tests for 401/403, tenant isolation, validation, idempotency replay/conflict, and in-memory audit append, but those tests are not part of the package/CI gate yet.
+- The baseline gate is `npm ci`, `npm run api:check`, `npm run typecheck`, `npm run build`, `npm run test:mock-recall:contract`, and `npm run test:exception-review:patch`.
+- The fixture-only exception-review PATCH focused direct test is part of the package/CI gate and covers 401/403, tenant isolation, validation, idempotency replay/conflict, and in-memory audit append.
 - Production provider, durable idempotency, persisted audit, and non-public tenant paths are not operational yet.
 - Contracted but unimplemented routes have no runtime tests.
 

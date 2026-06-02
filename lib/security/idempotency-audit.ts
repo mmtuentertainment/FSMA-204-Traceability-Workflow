@@ -83,13 +83,13 @@ export class FixtureIdempotencyStore<T> implements IdempotencyStore<T> {
   }
 
   private scopeKey(scope: IdempotencyScope): string {
-    return [
-      scope.tenantId,
-      scope.actorId,
-      scope.action,
-      scope.resourceRef,
-      scope.key,
-    ].join("|");
+    return JSON.stringify({
+      tenantId: scope.tenantId,
+      actorId: scope.actorId,
+      action: scope.action,
+      resourceRef: scope.resourceRef,
+      key: scope.key,
+    });
   }
 }
 

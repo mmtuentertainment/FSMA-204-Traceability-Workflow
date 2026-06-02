@@ -61,6 +61,12 @@ const FIXTURE_AUTH_TOKENS: Record<string, FixtureAuthPrincipal> = {
   },
 };
 
+export function isFixtureAuthRuntimeEnabled(
+  nodeEnv = process.env.NODE_ENV,
+): boolean {
+  return nodeEnv !== "production";
+}
+
 // Default adapter: preserves current public fixture behavior. No authentication; a
 // single implicit, server-derived tenant. It never throws, so it introduces no new
 // failure path — the live routes behave exactly as before.
@@ -81,23 +87,32 @@ function readBearerToken(request: Request): string | null {
   return match?.[1] ?? null;
 }
 
+function unauthenticatedFixtureContext(route: string): RequestContext {
+  return {
+    requestId: crypto.randomUUID(),
+    principal: { actorId: "unauthenticated", actorType: "user", roles: [] },
+    tenant: { tenantId: "unauthenticated", source: "unauthenticated" },
+    route,
+    authState: "unauthenticated",
+  };
+}
+
 // Local/test fixture auth for the first approved mutating write. It derives tenant
 // and role state only from known fixture bearer tokens; client-provided tenant
 // values in bodies, routes, queries, or arbitrary headers are ignored.
 export const fixtureAuthContextResolver: RequestContextResolver = {
   async resolve(request: Request): Promise<RequestContext> {
     const route = new URL(request.url).pathname;
+
+    if (!isFixtureAuthRuntimeEnabled()) {
+      return unauthenticatedFixtureContext(route);
+    }
+
     const token = readBearerToken(request);
     const fixture = token ? FIXTURE_AUTH_TOKENS[token] : undefined;
 
     if (!fixture) {
-      return {
-        requestId: crypto.randomUUID(),
-        principal: { actorId: "unauthenticated", actorType: "user", roles: [] },
-        tenant: { tenantId: "unauthenticated", source: "unauthenticated" },
-        route,
-        authState: "unauthenticated",
-      };
+      return unauthenticatedFixtureContext(route);
     }
 
     return {

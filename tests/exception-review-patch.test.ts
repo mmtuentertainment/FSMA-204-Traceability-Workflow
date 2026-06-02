@@ -5,9 +5,13 @@ import {
   fixtureExceptionReviewAuditSink,
   resetExceptionReviewFixtures,
 } from "../lib/api/exception-review.ts";
+import {
+  FixtureIdempotencyStore,
+  type IdempotencyScope,
+} from "../lib/security/idempotency-audit.ts";
 
 const exceptionId = "fixture-exception-ready-for-review";
-const pathname = `/api/traceability/exceptions/${exceptionId}`;
+const pathname = exceptionPath(exceptionId);
 
 type TestCase = {
   name: string;
@@ -18,6 +22,10 @@ function routeContext(id = exceptionId): {
   params: Promise<{ exceptionId: string }>;
 } {
   return { params: Promise.resolve({ exceptionId: id }) };
+}
+
+function exceptionPath(id = exceptionId): string {
+  return `/api/traceability/exceptions/${id}`;
 }
 
 async function patchException(args: {
@@ -59,16 +67,61 @@ function asRecord(value: unknown): Record<string, unknown> {
 }
 
 async function assertProblem(response: Response, status: number): Promise<void> {
+  return assertProblemInstance(response, status, pathname);
+}
+
+async function assertProblemInstance(
+  response: Response,
+  status: number,
+  expectedInstance: string,
+): Promise<void> {
   const body = asRecord(await readJson(response));
   assert.equal(response.status, status);
   assert.match(response.headers.get("content-type") ?? "", /problem\+json/);
   assert.equal(body.status, status);
   assert.equal(body.type, "about:blank");
-  assert.equal(body.instance, pathname);
+  assert.equal(body.instance, expectedInstance);
 }
 
 function auditCount(): number {
   return fixtureExceptionReviewAuditSink.readEvents().length;
+}
+
+async function withNodeEnv(
+  value: string | undefined,
+  run: () => Promise<void>,
+): Promise<void> {
+  const previous = process.env["NODE_ENV"];
+
+  try {
+    if (value === undefined) {
+      Reflect.deleteProperty(process.env, "NODE_ENV");
+    } else {
+      Reflect.set(process.env, "NODE_ENV", value);
+    }
+
+    await run();
+  } finally {
+    if (previous === undefined) {
+      Reflect.deleteProperty(process.env, "NODE_ENV");
+    } else {
+      Reflect.set(process.env, "NODE_ENV", previous);
+    }
+  }
+}
+
+function idempotencyScope(
+  overrides: Partial<IdempotencyScope> = {},
+): IdempotencyScope {
+  return {
+    tenantId: "fixture-tenant-a",
+    actorId: "fixture-reviewer",
+    action: "exception.review.update",
+    resourceRef: "traceability_exception:fixture-exception",
+    key: "fixture-key",
+    requestFingerprint: "fingerprint-a",
+    ...overrides,
+  };
 }
 
 const reviewPatch = {
@@ -104,6 +157,22 @@ const tests: TestCase[] = [
     },
   },
   {
+    name: "fixture Authorization returns 401 when NODE_ENV is production",
+    async run() {
+      await withNodeEnv("production", async () => {
+        await assertProblem(
+          await patchException({
+            body: reviewPatch,
+            key: "production-disabled-key",
+            token: "fixture-reviewer-token",
+          }),
+          401,
+        );
+      });
+      assert.equal(auditCount(), 0);
+    },
+  },
+  {
     name: "same-tenant non-reviewer returns 403 Problem Details",
     async run() {
       await assertProblem(
@@ -127,6 +196,24 @@ const tests: TestCase[] = [
           token: "fixture-other-tenant-reviewer-token",
         }),
         404,
+      );
+      assert.equal(auditCount(), 0);
+    },
+  },
+  {
+    name: "same-tenant reviewer receives 404 for unknown exception ID",
+    async run() {
+      const unknownExceptionId = "fixture-exception-not-found";
+
+      await assertProblemInstance(
+        await patchException({
+          body: reviewPatch,
+          key: "unknown-exception-key",
+          token: "fixture-reviewer-token",
+          id: unknownExceptionId,
+        }),
+        404,
+        exceptionPath(unknownExceptionId),
       );
       assert.equal(auditCount(), 0);
     },
@@ -198,6 +285,7 @@ const tests: TestCase[] = [
       assert.equal(events[0]?.afterState?.status, "in_review");
     },
   },
+  // These replay/conflict cases intentionally share the prior success state.
   {
     name: "same Idempotency-Key and fingerprint replays stored response",
     async run() {
@@ -225,6 +313,41 @@ const tests: TestCase[] = [
         409,
       );
       assert.equal(auditCount(), 1);
+    },
+  },
+  {
+    name: "idempotency scope serialization does not collide on pipe characters",
+    async run() {
+      const store = new FixtureIdempotencyStore<{ marker: string }>();
+      const scopeA = idempotencyScope({
+        resourceRef: "traceability_exception:fixture",
+        key: "review|key",
+        requestFingerprint: "fingerprint-a",
+      });
+      const scopeB = idempotencyScope({
+        resourceRef: "traceability_exception:fixture|review",
+        key: "key",
+        requestFingerprint: "fingerprint-b",
+      });
+
+      assert.equal((await store.check(scopeA)).status, "fresh");
+      await store.storeSuccess(scopeA, { marker: "scope-a" });
+      assert.equal((await store.check(scopeB)).status, "fresh");
+      await store.storeSuccess(scopeB, { marker: "scope-b" });
+
+      const replayA = await store.check(scopeA);
+      const replayB = await store.check(scopeB);
+
+      assert.equal(replayA.status, "replayed");
+      assert.equal(replayB.status, "replayed");
+
+      if (replayA.status === "replayed") {
+        assert.equal(replayA.storedResponse.marker, "scope-a");
+      }
+
+      if (replayB.status === "replayed") {
+        assert.equal(replayB.storedResponse.marker, "scope-b");
+      }
     },
   },
 ];

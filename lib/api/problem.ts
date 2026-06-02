@@ -8,9 +8,12 @@ export function problemResponse(
   problem: Problem,
   headers: HeadersInit = {},
 ): Response {
+  const responseHeaders = new Headers(headers);
+  responseHeaders.set("Content-Type", "application/problem+json");
+
   return new Response(JSON.stringify(problem), {
     status: problem.status,
-    headers: { "Content-Type": "application/problem+json", ...headers },
+    headers: responseHeaders,
   });
 }
 
