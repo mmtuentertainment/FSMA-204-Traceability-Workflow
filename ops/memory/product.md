@@ -15,6 +15,7 @@
 - Batch 33 added a docs-only approval packet for the first mutating-write activation candidate: exception-review PATCH only. Batch 34 later lifted that Phase 4-8 Non-Goal boundary only for the fixture-backed PATCH slice; production provider/auth/RBAC/tenant/idempotency/audit decisions remain gated.
 - Batch 34 implements that first write as fixture-only runtime: local/test bearer auth, server-derived fixture tenant, same-tenant reviewer RBAC, in-memory exception repository, idempotency replay/conflict, and append-only in-memory audit for `PATCH /api/traceability/exceptions/{exceptionId}` only.
 - Batch 35 records the production provider-selection direction without implementation: server-verified auth/session, server-derived tenant membership, tenant-scoped relational persistence, durable idempotency entries, and append-only audit evidence for the exception-review PATCH path.
+- Batch 41 records default future provider decisions without implementation: Auth.js database-backed sessions, PostgreSQL tenant_memberships, tenant_admin/quality_reviewer/read_only roles, PostgreSQL plus Drizzle, idempotency replay snapshots, append-only audit_events, a fixed-window limiter, and provider-backed tests before route success activation.
 - Batch 37 wires the existing fixture-only exception-review PATCH focused test into package scripts and the CI contract gate without changing runtime behavior.
 - `PLAN.md` is tracked in the current HEAD; do not edit it unless explicitly approved.
-- Next useful batch should be small, reversible, and consultant-approved.
+- Next useful code batch should be small, reversible, explicitly approved, and limited to provider scaffolding/tests before production-like route activation.
