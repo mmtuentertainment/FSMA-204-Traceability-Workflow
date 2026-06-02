@@ -18,6 +18,8 @@ export interface AuditEvent {
   source: string;
   reason?: string;
   idempotencyKey?: string;
+  beforeState?: Record<string, unknown>;
+  afterState?: Record<string, unknown>;
 }
 
 export interface AuditSink {
@@ -29,15 +31,19 @@ export interface IdempotencyScope {
   tenantId: string;
   actorId: string;
   action: Action;
+  resourceRef: string;
   key: string;
+  requestFingerprint: string;
 }
 
-export type IdempotencyCheck =
+export type IdempotencyCheck<T = unknown> =
   | { status: "fresh" }
-  | { status: "replayed"; storedResponseRef: string };
+  | { status: "replayed"; storedResponse: T }
+  | { status: "conflict" };
 
-export interface IdempotencyStore {
-  check(scope: IdempotencyScope): Promise<IdempotencyCheck>;
+export interface IdempotencyStore<T = unknown> {
+  check(scope: IdempotencyScope): Promise<IdempotencyCheck<T>>;
+  storeSuccess(scope: IdempotencyScope, response: T): Promise<void>;
 }
 
 // Default no-op sink: accepts and discards. Never invoked by read routes; exists so
@@ -47,3 +53,66 @@ export const noopAuditSink: AuditSink = {
     // no-op until an approved audit-storage batch provides a real sink.
   },
 };
+
+export class FixtureIdempotencyStore<T> implements IdempotencyStore<T> {
+  private readonly entries = new Map<
+    string,
+    { requestFingerprint: string; response: T }
+  >();
+
+  async check(scope: IdempotencyScope): Promise<IdempotencyCheck<T>> {
+    const stored = this.entries.get(this.scopeKey(scope));
+    if (!stored) {
+      return { status: "fresh" };
+    }
+
+    return stored.requestFingerprint === scope.requestFingerprint
+      ? { status: "replayed", storedResponse: stored.response }
+      : { status: "conflict" };
+  }
+
+  async storeSuccess(scope: IdempotencyScope, response: T): Promise<void> {
+    this.entries.set(this.scopeKey(scope), {
+      requestFingerprint: scope.requestFingerprint,
+      response,
+    });
+  }
+
+  reset(): void {
+    this.entries.clear();
+  }
+
+  private scopeKey(scope: IdempotencyScope): string {
+    return JSON.stringify({
+      tenantId: scope.tenantId,
+      actorId: scope.actorId,
+      action: scope.action,
+      resourceRef: scope.resourceRef,
+      key: scope.key,
+    });
+  }
+}
+
+export class FixtureAuditSink implements AuditSink {
+  private readonly events: AuditEvent[] = [];
+
+  async append(event: AuditEvent): Promise<void> {
+    this.events.push({
+      ...event,
+      beforeState: event.beforeState ? { ...event.beforeState } : undefined,
+      afterState: event.afterState ? { ...event.afterState } : undefined,
+    });
+  }
+
+  readEvents(): readonly AuditEvent[] {
+    return this.events.map((event) => ({
+      ...event,
+      beforeState: event.beforeState ? { ...event.beforeState } : undefined,
+      afterState: event.afterState ? { ...event.afterState } : undefined,
+    }));
+  }
+
+  reset(): void {
+    this.events.length = 0;
+  }
+}

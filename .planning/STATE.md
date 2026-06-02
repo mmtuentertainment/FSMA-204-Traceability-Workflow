@@ -5,7 +5,7 @@
 See: `.planning/PROJECT.md` (updated 2026-05-28)
 
 **Core value:** A reviewer can assemble a trustworthy, human-reviewed mock recall readiness packet from traceability records and supplier KDE gaps without mistaking the workflow for legal or FDA approval.
-**Current focus:** Phase 3 - boundary skeleton implemented (Batch 29). The MockRecall read routes now flow through server-derived request context, deny-by-default authorization, a tenant-scoped data seam, the Problem catalog, and idempotency/audit interface shapes, with byte-identical fixture behavior. Further Phase 3 work (auth/persistence providers and enforcement) remains pending explicit approval.
+**Current focus:** Phase 3 - boundary skeleton implemented (Batch 29), first fixture-only exception-review PATCH activated (Batch 34), and production provider direction recorded (Batch 35). The MockRecall read routes flow through server-derived request context, deny-by-default authorization, a tenant-scoped data seam, and the Problem catalog with byte-identical fixture behavior. The exception-review PATCH uses local/test fixture auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, in-memory fixture state, idempotency replay/conflict handling, and append-only in-memory audit evidence. Further production auth, persistence, RBAC provider, durable idempotency, and persisted audit work remains pending explicit approval.
 
 ## Current Repository State
 
@@ -14,10 +14,10 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 - Remote: `https://github.com/mmtuentertainment/FSMA-204-Traceability-Workflow.git`.
 - OpenAPI source of truth: `api/openapi.yaml`.
 - Generated types: `lib/api/generated/openapi-types.ts`.
-- Runtime implemented today: mock recall detail and packet routes expose one contract fixture for smoke checks and return not-found Problem Details for missing resources. As of Batch 29 these routes flow through the boundary skeleton (request-context resolver, deny-by-default authorization, tenant-scoped `MockRecallSource`, Problem catalog) with byte-identical behavior.
-- Boundary skeleton seams (`lib/security/request-context.ts`, `lib/security/authorization.ts`, `lib/api/mock-recall-source.ts`, `lib/api/route-boundary.ts`, `lib/security/idempotency-audit.ts`) are interface shapes plus public-fixture default adapters only: no auth provider, no persistence/storage, no enforcement on non-public tenants, and idempotency/audit are uninvoked.
+- Runtime implemented today: mock recall detail and packet routes expose one contract fixture for smoke checks and return not-found Problem Details for missing resources. As of Batch 29 these routes flow through the boundary skeleton (request-context resolver, deny-by-default authorization, tenant-scoped `MockRecallSource`, Problem catalog) with byte-identical behavior. As of Batch 34, the exception-review PATCH exists as a fixture-only mutating write.
+- Boundary skeleton seams (`lib/security/request-context.ts`, `lib/security/authorization.ts`, `lib/api/mock-recall-source.ts`, `lib/api/route-boundary.ts`, `lib/security/idempotency-audit.ts`) remain provider-neutral. The MockRecall read defaults are public-fixture adapters only, while the exception-review PATCH uses local/test fixture auth plus in-memory fixture idempotency and audit evidence. No production auth provider, persistence/storage, production RBAC provider, durable idempotency store, or persisted audit sink exists.
 - MockRecall OpenAPI examples have been reviewed against the fixture and missing-resource behavior; no OpenAPI repair or runtime change was needed.
-- Current absences: database, auth, tenant model, RBAC, audit log, persisted traceability records, imports, exports, storage-backed mock recall payloads, production CSV generation, and production workflow logic.
+- Current absences: database, production auth provider, production tenant model, production RBAC provider, persisted audit log, persisted traceability records, imports, exports, storage-backed mock recall payloads, production CSV generation, and broader production workflow logic.
 
 ## Planning Artifacts
 
@@ -44,14 +44,14 @@ See: `.planning/PROJECT.md` (updated 2026-05-28)
 - Use GSD `interactive` mode with Codex text-mode and no auto-advance.
 - Start with Phase 1 rather than jumping directly into database, auth, CSV, or UI work.
 - Phase 2's immediate scope is documenting the existing Problem Details verification (the committed `tests/mock-recall-contract-smoke.mjs` smoke check), not runtime success expansion or persistence. The only success path remains the single static contract fixture.
-- Phase 3 kickoff planning defines the approval gate and invariants for security/persistence work; no implementation has started.
+- Phase 3 kickoff planning defines the approval gate and invariants for security/persistence work; implementation has started only as approved narrow fixture slices.
 - 03-01A chooses a provider-neutral boundary model: server-derived tenant identity, request-boundary auth, deny-by-default RBAC, tenant-scoped persistence, and paired idempotency/audit for future writes.
-- Batch 29 implemented the approved boundary skeleton (Variant A) for that model: the two MockRecall read routes flow through a request-context resolver, a deny-by-default authorization policy, a tenant-scoped `MockRecallSource`, and the Problem catalog (now with 401/403 entries), with idempotency/audit as interface shapes only. Fixture success and 404 behavior are byte-identical; no provider, storage, OpenAPI, generated-type, or package change. Phase 3 is not complete.
+- Batch 29 implemented the approved boundary skeleton (Variant A) for that model: the two MockRecall read routes flow through a request-context resolver, a deny-by-default authorization policy, a tenant-scoped `MockRecallSource`, and the Problem catalog (now with 401/403 entries). Batch 34 then activated the first fixture-only exception-review PATCH with local/test auth, reviewer RBAC, in-memory fixture state, idempotency replay/conflict, and append-only in-memory audit evidence. No production provider, storage, OpenAPI, generated-type, package, or CI change was introduced by the provider-selection docs in Batch 35. Phase 3 is not complete.
 - Batches 27-28 (Phase 1-2 of the refactor plan) made the packet CSV a derived projection and reshaped Problem Details into a named catalog seam, both byte-identical.
 
 ## Next Step
 
-The boundary skeleton (Batch 29) is in place. The next approved batch is the first mutating-write path, which activates the idempotency and audit interfaces and a non-public resolver/policy, and selects a persistence and auth provider. That path is now designed (gated) in `03-02-first-mutating-write-design.md` (Batch 31); the recommended first write is the exception-review PATCH, which requires an explicit Phase 4-8 Non-Goal lift before any code. No provider, storage, or enforcement on non-public tenants exists yet, and the optional `@/*` path alias was deferred.
+The boundary skeleton (Batch 29), fixture-only exception-review PATCH (Batch 34), and docs-only production provider direction (Batch 35) are in place. The next implementation candidate is a provider-adapter spike for `PATCH /api/traceability/exceptions/{exceptionId}` only, after Matt selects concrete provider details. No production provider, storage, enforcement on non-public tenants, supplier workflow, lot/event workflow, export, CSV generation, or broader Phase 4-8 runtime work is approved yet, and the optional `@/*` path alias was deferred.
 
 ## Guardrails
 

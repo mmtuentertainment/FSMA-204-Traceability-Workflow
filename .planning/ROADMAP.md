@@ -80,7 +80,7 @@ Plans:
 - [ ] 03-03: Add idempotency and append-only audit foundation.
 - [ ] 03-04: Verify security and artifact hygiene.
 
-**Kickoff note:** Planning exists at `.planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md`. Phase 3 implementation is not started and requires explicit approval before any code, package, OpenAPI, database, auth, RBAC, audit, or persistence change.
+**Current-state note:** Phase 3 has started but is not complete. The boundary skeleton is implemented, the first fixture-only exception-review PATCH exists, and the production provider direction is documented. Production auth, database persistence, production RBAC provider, durable idempotency, persisted audit evidence, supplier workflow, lot/event workflow, export, CSV generation, and broader Phase 4-8 runtime work remain out of scope until a future approved micro-batch.
 
 ### Phase 4: Traceability Lot And Event Records
 
@@ -180,7 +180,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8.
 |-------|----------------|--------|-----------|
 | 1. Contract Gate And Examples | 3/3 | Complete | 2026-05-30 |
 | 2. Problem Details Test Harness | 2/2 | Complete | 2026-05-30 |
-| 3. Security And Persistence Foundation | 0/4 | Not started | - |
+| 3. Security And Persistence Foundation | 0/4 | Started - fixture-only slices | - |
 | 4. Traceability Lot And Event Records | 0/3 | Not started | - |
 | 5. Human Review Exceptions | 0/3 | Not started | - |
 | 6. Supplier KDE Requests | 0/2 | Not started | - |

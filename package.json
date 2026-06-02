@@ -11,10 +11,11 @@
     "api:types": "openapi-typescript api/openapi.yaml -o lib/api/generated/openapi-types.ts",
     "api:types:check": "openapi-typescript api/openapi.yaml -o lib/api/generated/openapi-types.ts --check",
     "api:check": "npm run api:lint && npm run api:types:check",
-    "test:mock-recall:contract": "node tests/mock-recall-contract-smoke.mjs"
+    "test:mock-recall:contract": "node tests/mock-recall-contract-smoke.mjs",
+    "test:exception-review:patch": "node --experimental-strip-types tests/exception-review-patch.test.ts"
   },
   "engines": {
-    "node": ">=20.9"
+    "node": ">=22.6"
   },
   "dependencies": {
     "next": "^16.2.6",
