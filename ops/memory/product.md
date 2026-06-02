@@ -19,6 +19,7 @@
 - Batch 42 explicitly lifts the Phase 4-8 non-goal only for future exception-review PATCH implementation; lot/event workflow, supplier KDE workflow, mock recall computation, production CSV, imports, dashboards, supplier portal, and broader workflow work remain excluded.
 - Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation for tenant memberships, traceability exceptions, idempotency records, and append-only audit events without runtime route wiring or a live database provider.
 - Batch 44 adds `db:check` to the CI contract gate without runtime, schema, migration, package, or API changes.
+- Batch 45 records a docs-only approval packet for future exception-review PATCH provider activation; current runtime remains fixture-only.
 - Batch 37 wires the existing fixture-only exception-review PATCH focused test into package scripts and the CI contract gate without changing runtime behavior.
 - `PLAN.md` is tracked in the current HEAD; do not edit it unless explicitly approved.
-- Next useful code batch should be small, reversible, explicitly approved, and limited to provider-backed service/repository tests before production-like route activation.
+- Next useful code batch should be small, reversible, explicitly approved, and limited to provider-backed service/repository tests plus narrow route-service-repository wiring before production-like route activation.

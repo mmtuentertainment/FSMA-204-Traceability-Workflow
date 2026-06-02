@@ -19,6 +19,7 @@ Conservative FSMA 204 traceability readiness workflow. This product should help 
 - The fixture is for contract/runtime smoke checks only; no persisted mock-recall records or production CSV generation workflow exists yet.
 - `PATCH /api/traceability/exceptions/{exceptionId}` has the first approved fixture-backed mutating write: local/test fixture auth, server-derived fixture tenant identity, deny-by-default reviewer RBAC, an in-memory fixture exception repository, idempotency replay/conflict handling, and append-only in-memory fixture audit evidence.
 - A PostgreSQL + Drizzle schema/migration foundation exists for the future exception-review PATCH provider path, but no live database connection, production auth provider, runtime tenant provider, production RBAC provider, persisted audit enforcement, runtime persisted traceability records, imports, exports, supplier workflow, lot/event workflow, or production CSV generation exists yet.
+- Batch 45 adds a docs-only activation approval packet for the future exception-review PATCH provider implementation; it does not change runtime behavior or activate the route.
 - Phase 1 and Phase 2 are complete. Phase 3 has started but is not complete; the approved activation remains limited to the exception-review PATCH only.
 
 ## Setup and Checks
