@@ -35,4 +35,5 @@ npm run test:exception-review:patch
 
 `npm run api:check` wraps the component contract commands `npm run api:lint` and `npm run api:types:check`.
 `npm run db:check` validates the Drizzle migration metadata without requiring a live database. `drizzle.config.ts` reads `DATABASE_URL` when provided and otherwise uses a credential-free local fallback URL; the baseline typecheck and build do not require a live database URL.
+The GitHub Actions contract gate mirrors the local check sequence, including `npm run db:check`.
 `npm run test:exception-review:patch` runs the fixture-only exception-review PATCH focused test with Node's built-in type stripping. Node may print the current experimental type-stripping and module-type warnings; those warnings are expected for this no-test-runner fixture gate.

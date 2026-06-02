@@ -28,6 +28,9 @@ jobs:
       - name: Check OpenAPI contract
         run: npm run api:check
 
+      - name: Check database schema migrations
+        run: npm run db:check
+
       - name: Typecheck
         run: npm run typecheck
 

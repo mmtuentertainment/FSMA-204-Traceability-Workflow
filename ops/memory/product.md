@@ -3,7 +3,7 @@
 - FSMA 204 readiness workflow, not compliance certification.
 - First wedge remains fresh-cut produce mock recall readiness.
 - OpenAPI-first contract and generated TypeScript contract tooling exist.
-- The GitHub Actions CI contract gate exists and runs install, `api:check`, typecheck, build, MockRecall contract smoke, and exception-review PATCH focused fixture checks.
+- The GitHub Actions CI contract gate exists and runs install, `api:check`, `db:check`, typecheck, build, MockRecall contract smoke, and exception-review PATCH focused fixture checks.
 - Mock-recall routes expose one OpenAPI-declared contract fixture for runtime smoke checks.
 - MockRecall OpenAPI examples were reviewed against the fixture and missing-resource Problem Details behavior; no OpenAPI repair was needed.
 - The committed MockRecall contract smoke check verifies the fixture and missing-resource Problem Details behavior against a production Next server.
@@ -18,6 +18,7 @@
 - Batch 41 records default future provider decisions without implementation: Auth.js database-backed sessions, PostgreSQL tenant_memberships, tenant_admin/quality_reviewer/read_only roles, PostgreSQL plus Drizzle, idempotency replay snapshots, append-only audit_events, a fixed-window limiter, and provider-backed tests before route success activation.
 - Batch 42 explicitly lifts the Phase 4-8 non-goal only for future exception-review PATCH implementation; lot/event workflow, supplier KDE workflow, mock recall computation, production CSV, imports, dashboards, supplier portal, and broader workflow work remain excluded.
 - Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation for tenant memberships, traceability exceptions, idempotency records, and append-only audit events without runtime route wiring or a live database provider.
+- Batch 44 adds `db:check` to the CI contract gate without runtime, schema, migration, package, or API changes.
 - Batch 37 wires the existing fixture-only exception-review PATCH focused test into package scripts and the CI contract gate without changing runtime behavior.
 - `PLAN.md` is tracked in the current HEAD; do not edit it unless explicitly approved.
 - Next useful code batch should be small, reversible, explicitly approved, and limited to provider-backed service/repository tests before production-like route activation.

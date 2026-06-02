@@ -1,10 +1,10 @@
 {
-  "version": "1.8",
-  "timestamp": "2026-06-02T10:28:47-04:00",
+  "version": "1.9",
+  "timestamp": "2026-06-02T11:18:59-04:00",
   "phase": 3,
   "phase_name": "Security And Persistence Foundation",
   "phase_dir": ".planning/phases/FSMA-03-security-and-persistence-foundation",
-  "status": "phase_3_postgres_drizzle_foundation_added",
+  "status": "phase_3_db_check_ci_gate_added",
   "repo": {
     "path": "C:\\Users\\matth\\Desktop\\FSMA 204 Workflow Product",
     "branch": "main",
@@ -39,7 +39,8 @@
     "phase_3_provider_decision_gap_audit": ".planning/phase-3-provider-decision-gap-audit.md",
     "phase_3_provider_activation_decisions": ".planning/phase-3-provider-activation-decisions.md",
     "phase_3_exception_review_patch_activation_scope": ".planning/phase-3-exception-review-patch-activation-scope.md",
-    "batch_43_postgres_drizzle_foundation": "ops/deltas/0043-postgres-drizzle-foundation.md"
+    "batch_43_postgres_drizzle_foundation": "ops/deltas/0043-postgres-drizzle-foundation.md",
+    "batch_44_db_check_ci_gate": "ops/deltas/0044-db-check-ci-gate.md"
   },
   "current_state": {
     "summary": [
@@ -59,11 +60,12 @@
       "Batch 40 audited the remaining provider decision gaps after PR #10 without changing runtime behavior.",
       "Batch 41 records default provider activation decisions for the future exception-review PATCH path: Auth.js database-backed sessions, application-owned PostgreSQL tenant_memberships, tenant_admin/quality_reviewer/read_only roles, PostgreSQL plus Drizzle, durable idempotency replay snapshots, append-only audit_events, a PostgreSQL fixed-window limiter, and provider-backed tests before route success activation.",
       "Batch 42 explicitly lifts the Phase 4-8 non-goal only for future production-like exception-review PATCH implementation, while excluding lot/event workflow, supplier KDE workflow, mock recall readiness computation, production CSV, imports, dashboards, supplier portal, and broader workflow work.",
-      "Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation for tenant_memberships, traceability_exceptions, idempotency_records, and append-only audit_events without wiring a runtime database provider or changing route behavior."
+      "Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation for tenant_memberships, traceability_exceptions, idempotency_records, and append-only audit_events without wiring a runtime database provider or changing route behavior.",
+      "Batch 44 adds npm run db:check to the CI contract gate so Drizzle schema/migration metadata is protected without runtime, schema, migration, or package changes."
     ],
     "openapi_source_of_truth": "api/openapi.yaml",
     "generated_contract_types": "lib/api/generated/openapi-types.ts",
-    "ci_contract_gate": ".github/workflows/contract-gate.yml runs npm ci, npm run api:check, npm run typecheck, npm run build, npm run test:mock-recall:contract, and npm run test:exception-review:patch on push and pull request events.",
+    "ci_contract_gate": ".github/workflows/contract-gate.yml runs npm ci, npm run api:check, npm run db:check, npm run typecheck, npm run build, npm run test:mock-recall:contract, and npm run test:exception-review:patch on push and pull request events.",
     "mock_recall_contract_smoke": "tests/mock-recall-contract-smoke.mjs verifies the current contract fixture and missing-resource Problem Details behavior against a production Next server.",
     "exception_review_patch_focused_test": "tests/exception-review-patch.test.ts verifies the fixture-only exception-review PATCH path directly through npm run test:exception-review:patch. The script uses Node built-in type stripping and may print the current experimental type-stripping and module-type warnings.",
     "mock_recall_examples_review": "Batch 21 found the MockRecall detail, packet CSV, and 404 Problem Details examples aligned with runtime fixture intent; api/openapi.yaml was unchanged.",
@@ -93,7 +95,7 @@
   ],
   "next_recommended_actions": [
     {
-      "action": "The first approved mutating write is implemented as a fixture-only PATCH /api/traceability/exceptions/{exceptionId}. Batch 41 records default future provider decisions, Batch 42 limits the Phase 4-8 non-goal lift to that future write only, and Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation. The next smallest implementation candidate is provider-backed service/repository tests after Matt approves exact code scope.",
+      "action": "The first approved mutating write is implemented as a fixture-only PATCH /api/traceability/exceptions/{exceptionId}. Batch 41 records default future provider decisions, Batch 42 limits the Phase 4-8 non-goal lift to that future write only, Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation, and Batch 44 protects that foundation in CI. The next smallest implementation candidate is provider-backed service/repository tests after Matt approves exact code scope.",
       "status": "ready_for_next_approval"
     },
     {
