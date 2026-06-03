@@ -1,6 +1,6 @@
 {
-  "id": "18fe17aa-be24-4881-b7ce-fb48131fa616",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "3e4da522-1503-463d-b291-268241a70115",
+  "prevId": "18fe17aa-be24-4881-b7ce-fb48131fa616",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -172,6 +172,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "resource_type": {
+          "name": "resource_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "idempotency_key": {
           "name": "idempotency_key",
           "type": "text",
@@ -302,12 +314,14 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "idempotency_records_tenant_operation_key_unique": {
-          "name": "idempotency_records_tenant_operation_key_unique",
+        "idempotency_records_tenant_operation_resource_key_unique": {
+          "name": "idempotency_records_tenant_operation_resource_key_unique",
           "nullsNotDistinct": false,
           "columns": [
             "tenant_id",
             "operation",
+            "resource_type",
+            "resource_id",
             "idempotency_key"
           ]
         }

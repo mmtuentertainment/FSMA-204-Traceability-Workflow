@@ -121,6 +121,8 @@ export const idempotencyRecords = pgTable(
       .generatedAlwaysAsIdentity(),
     tenantId: text("tenant_id").notNull(),
     operation: text("operation").notNull(),
+    resourceType: text("resource_type").notNull(),
+    resourceId: text("resource_id").notNull(),
     idempotencyKey: text("idempotency_key").notNull(),
     requestHash: text("request_hash").notNull(),
     lifecycleStatus: text("lifecycle_status").notNull(),
@@ -139,9 +141,11 @@ export const idempotencyRecords = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   },
   (table) => [
-    unique("idempotency_records_tenant_operation_key_unique").on(
+    unique("idempotency_records_tenant_operation_resource_key_unique").on(
       table.tenantId,
       table.operation,
+      table.resourceType,
+      table.resourceId,
       table.idempotencyKey,
     ),
     index("idempotency_records_tenant_lifecycle_idx").on(
