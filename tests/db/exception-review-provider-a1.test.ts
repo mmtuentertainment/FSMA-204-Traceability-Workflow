@@ -399,7 +399,7 @@ const tests: TestCase[] = [
 
       assert.equal(conflict.status, "conflict");
       assert.equal((await readException()).status, "in_review");
-      assert.equal(await countRows("audit_events"), 1);
+      assert.equal(await countRows("audit_events"), 2);
       assert.equal(await countRows("idempotency_records"), 1);
     },
   },

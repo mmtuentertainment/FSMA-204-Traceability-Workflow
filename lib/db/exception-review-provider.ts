@@ -9,6 +9,7 @@ const SUCCESS_CONTENT_TYPE = "application/json";
 const IDEMPOTENCY_KEY_MIN_LENGTH = 8;
 const IDEMPOTENCY_KEY_MAX_LENGTH = 200;
 const DEFAULT_RESERVATION_TTL_MS = 5 * 60 * 1000;
+const IDEMPOTENCY_CONFLICT_REASON = "idempotency_request_hash_mismatch";
 const REPLAY_HEADER_ALLOWLIST = new Set([
   "content-type",
   "location",
@@ -73,6 +74,20 @@ export interface ProviderExceptionReviewRequest {
   replayHeaders?: Record<string, string | number | undefined>;
 }
 
+export interface ProviderProblemDetails {
+  type: "about:blank";
+  title: "Conflict";
+  status: 409;
+  detail: string;
+  context: {
+    operation: string;
+    resource_type: string;
+    resource_id: string;
+    idempotency_key: string;
+    reason: typeof IDEMPOTENCY_CONFLICT_REASON;
+  };
+}
+
 export type ProviderExceptionReviewOutcome =
   | {
       status: "accepted";
@@ -87,7 +102,13 @@ export type ProviderExceptionReviewOutcome =
       auditEventId: number | null;
       idempotencyRecordId: number;
     }
-  | { status: "conflict"; idempotencyRecordId: number }
+  | {
+      status: "conflict";
+      idempotencyRecordId: number;
+      auditEventId: number;
+      problem: ProviderProblemDetails;
+      storedResponseBody: ProviderExceptionRecord | null;
+    }
   | { status: "in_flight"; idempotencyRecordId: number; retryAfterSeconds: number }
   | { status: "forbidden" }
   | { status: "not_found" }
@@ -267,7 +288,11 @@ export async function reserveIdempotencyRecord(
 ): Promise<
   | { status: "fresh"; idempotencyRecordId: number }
   | { status: "replayed"; idempotencyRecordId: number; replay: IdempotencyReplay }
-  | { status: "conflict"; idempotencyRecordId: number }
+  | {
+      status: "conflict";
+      idempotencyRecordId: number;
+      storedResponseBody: ProviderExceptionRecord | null;
+    }
   | { status: "in_flight"; idempotencyRecordId: number; retryAfterSeconds: number }
   | { status: "reclaimed"; idempotencyRecordId: number }
 > {
@@ -326,7 +351,11 @@ export async function reserveIdempotencyRecord(
   }
 
   if (row.request_hash !== args.requestHash) {
-    return { status: "conflict", idempotencyRecordId: row.id };
+    return {
+      status: "conflict",
+      idempotencyRecordId: row.id,
+      storedResponseBody: row.replay_body,
+    };
   }
 
   if (row.lifecycle_status === "completed") {
@@ -469,6 +498,44 @@ export async function appendExceptionReviewAuditEvent(
   return result.rows[0]?.id as number;
 }
 
+export async function appendExceptionReviewErrorAuditEvent(
+  client: ProviderDbClient,
+  args: {
+    tenantId: string;
+    actorAuthSubjectId: string;
+    resourceId: string;
+    source: string;
+    idempotencyKey: string;
+    status: "conflict" | "error";
+    errorReason: typeof IDEMPOTENCY_CONFLICT_REASON;
+    problem: ProviderProblemDetails;
+    storedResponseBody: ProviderExceptionRecord | null;
+  },
+): Promise<number> {
+  const result = await client.query<AuditEventRow>(
+    `
+      INSERT INTO audit_events (
+        tenant_id, actor_auth_subject_id, action, resource_type, resource_id,
+        source, reason, metadata
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
+      RETURNING id
+    `,
+    [
+      args.tenantId,
+      args.actorAuthSubjectId,
+      EXCEPTION_REVIEW_OPERATION,
+      TRACEABILITY_EXCEPTION_RESOURCE_TYPE,
+      args.resourceId,
+      args.source,
+      args.errorReason,
+      JSON.stringify(exceptionReviewErrorAuditMetadata(args)),
+    ],
+  );
+
+  return result.rows[0]?.id as number;
+}
+
 export async function reviewTraceabilityExceptionWithProvider(
   client: ProviderDbClient,
   request: ProviderExceptionReviewRequest,
@@ -520,9 +587,28 @@ export async function reviewTraceabilityExceptionWithProvider(
   }
 
   if (reservation.status === "conflict") {
+    const problem = idempotencyConflictProblem({
+      idempotencyKey: request.idempotencyKey,
+      resourceId: request.exceptionId,
+    });
+    const auditEventId = await appendExceptionReviewErrorAuditEvent(client, {
+      tenantId: request.tenantId,
+      actorAuthSubjectId: request.actorAuthSubjectId,
+      resourceId: request.exceptionId,
+      source: request.source,
+      idempotencyKey: request.idempotencyKey,
+      status: "conflict",
+      errorReason: IDEMPOTENCY_CONFLICT_REASON,
+      problem,
+      storedResponseBody: reservation.storedResponseBody,
+    });
+
     return {
       status: "conflict",
       idempotencyRecordId: reservation.idempotencyRecordId,
+      auditEventId,
+      problem,
+      storedResponseBody: reservation.storedResponseBody,
     };
   }
 
@@ -623,6 +709,7 @@ function exceptionReviewAuditMetadata(args: {
   return {
     operation: EXCEPTION_REVIEW_OPERATION,
     resource_type: TRACEABILITY_EXCEPTION_RESOURCE_TYPE,
+    status: "success",
     from_status: args.before.status,
     to_status: args.after.status,
     from_review_reason: args.before.review_reason ?? null,
@@ -631,6 +718,44 @@ function exceptionReviewAuditMetadata(args: {
     source_document_ref: args.after.source_document_ref ?? null,
     review_notes_present: Boolean(args.after.review_notes),
     idempotency_key: args.idempotencyKey,
+  };
+}
+
+function exceptionReviewErrorAuditMetadata(args: {
+  idempotencyKey: string;
+  status: "conflict" | "error";
+  errorReason: typeof IDEMPOTENCY_CONFLICT_REASON;
+  problem: ProviderProblemDetails;
+  storedResponseBody: ProviderExceptionRecord | null;
+}): Record<string, unknown> {
+  return {
+    operation: EXCEPTION_REVIEW_OPERATION,
+    resource_type: TRACEABILITY_EXCEPTION_RESOURCE_TYPE,
+    status: args.status,
+    error_reason: args.errorReason,
+    idempotency_key: args.idempotencyKey,
+    problem: args.problem,
+    stored_response_present: args.storedResponseBody !== null,
+  };
+}
+
+function idempotencyConflictProblem(args: {
+  idempotencyKey: string;
+  resourceId: string;
+}): ProviderProblemDetails {
+  return {
+    type: "about:blank",
+    title: "Conflict",
+    status: 409,
+    detail:
+      "Idempotency-Key was already used with a different request hash for this resource.",
+    context: {
+      operation: EXCEPTION_REVIEW_OPERATION,
+      resource_type: TRACEABILITY_EXCEPTION_RESOURCE_TYPE,
+      resource_id: args.resourceId,
+      idempotency_key: args.idempotencyKey,
+      reason: IDEMPOTENCY_CONFLICT_REASON,
+    },
   };
 }
 

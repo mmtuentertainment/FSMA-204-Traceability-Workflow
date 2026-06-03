@@ -135,6 +135,12 @@ Batch A tests the fixed-window limiter as a **behavioral contract** through an *
 
 All five areas run against a real PostgreSQL test DB via `node --experimental-strip-types` + `node:assert/strict`, exercise the service/repository **directly** (never the live PATCH route), seed and assert via independent tenant-scoped `SELECT`, and reset state between cases. Each area below lists the minimum behaviors Batch A must prove; the bracketed IDs are the reference case set. The acceptance denominator is **107 cases total** — Area 1 (TM-01..TM-17, 17), Area 2 (A2-01..A2-22, 22), Area 3 (A3-01..A3-24, 24), Area 4 (A4-01..A4-27, 27), Area 5 (A5-01..A5-17, 17) — and every referenced ID must pass (see Batch A Acceptance Criteria).
 
+### Implementation Progress After This Approval Packet
+
+- **Batch 51 / A1 complete:** added the T3 resource-scope migration, repaired stale Drizzle snapshot metadata for `audit_events.reason`, added the first non-route provider-backed exception-review service/repository spine, and added 12 focused provider-backed tests for membership lookup, tenant-scoped update, idempotency reserve/replay/conflict/in-flight/reclaim, accepted audit append, and no route/rate-limit-table proof.
+- **Batch 52 / A2 complete:** extends the provider-backed slice for request-hash mismatch Problem Details, stored replay-body introspection on conflicts, cross-resource and cross-tenant idempotency isolation, repeated conflict determinism, and conflict/error audit events. This A2 slice updates the earlier audit expectation for hash-mismatch conflicts: mismatched idempotency requests now append structured error audit evidence, while replay, in-flight duplicates, and rejected non-transition paths remain non-appending until separately approved.
+- **Still remaining:** the full 107-case Batch A matrix is not complete. Remaining inventory includes the broader membership role/check-constraint matrix, full exception update enum/partial-patch matrix, multi-connection competing reservation proof, forced-fault atomic rollback proof, append-only surface/non-enforcement tests, full T4 redaction matrix, and service-level fixed-window rate-limit posture tests. Batch B route wiring, live `DATABASE_URL`, persistent rate limiting, and runtime hardening remain gated.
+
 ### Area 1 — Tenant membership lookup (`tenant_memberships`)
 
 Repository read consumed by Decision 2 (tenant identity) and Decision 3 (RBAC). Minimum behaviors:
@@ -185,7 +191,7 @@ Tenant-scoped append-only repository, coordinated with the transition only where
 - `reason` is nullable and holds a sanitized reason code, never raw notes. [A4-07]
 - Prior/next state live **inside** `metadata` jsonb (no dedicated columns — T8); `metadata` is a populated, valid JSON object distinguishable from the `'{}'` default for a recorded transition. [A4-10, A4-11]
 - The completed idempotency snapshot references the new `audit_event_id` via FK (and a dangling reference fails the FK). [A4-12]
-- No extra append on non-transitions: a replay, a hash-mismatch `409`, an in-flight duplicate, and any rejected path (`401`/`403`/`404`/`422`) append **zero** new rows; a transaction rollback leaves no orphan audit row. [A4-13..A4-17]
+- No extra append on non-transitions: a replay, an in-flight duplicate, and any rejected path (`401`/`403`/`404`/`422`) append **zero** new rows; a transaction rollback leaves no orphan audit row. Hash-mismatch `409` conflicts are handled by Batch 52 / A2 as explicit structured error audit events. [A4-13..A4-17]
 - The repository exposes an append-only surface with **no** update and **no** delete method. [A4-18, A4-19]
 - DB-level append-only is **not** enforced by the scaffold: a privileged raw `UPDATE`/`DELETE` on `audit_events` still succeeds; Batch A documents this as expected non-enforcement and defers DB-level enforcement (trigger/role) to Batch B (T6/T9). [A4-20]
 - T4 redaction: `metadata` keys are a subset of the enumerated allowlist; it never stores secrets, raw bodies, `DATABASE_URL`, raw documents, or unnecessary PII (only `source_document_ref`-style references); the idempotency key is recorded as an identifier without displacing the structured evidence. [A4-21..A4-24]
