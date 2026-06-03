@@ -13,7 +13,8 @@
     "api:check": "npm run api:lint && npm run api:types:check",
     "db:check": "drizzle-kit check --config drizzle.config.ts",
     "test:mock-recall:contract": "node tests/mock-recall-contract-smoke.mjs",
-    "test:exception-review:patch": "node --experimental-strip-types tests/exception-review-patch.test.ts"
+    "test:exception-review:patch": "node --experimental-strip-types tests/exception-review-patch.test.ts",
+    "fallow:ci": "fallow audit --ci"
   },
   "engines": {
     "node": ">=22.6"
