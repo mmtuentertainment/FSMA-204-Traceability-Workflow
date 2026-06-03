@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fallow — codebase intelligence wiki</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topnav">
+  <span class="brand">fallow<span class="v">&nbsp;wiki · v2.87</span></span>
+  <nav>
+    <a href="index.html" class="active">Home</a>
+    <a href="reference.html">Reference</a>
+    <a href="decision-tree.html">Decision tree</a>
+    <a href="mcp-tools.html">MCP tools</a>
+    <a href="config-and-suppression.html">Config &amp; suppression</a>
+    <a href="this-project.html">This project</a>
+  </nav>
+</header>
+<main>
+  <h1>fallow — codebase intelligence for TypeScript &amp; JavaScript</h1>
+  <p class="lede">A deterministic, Rust-native (oxc) analyzer that answers <em>structural</em> questions about the
+  whole codebase — what's unused, duplicated, circular, complex, or boundary-breaking — and exposes that as
+  CLI text, JSON, an MCP server, and an LSP. No AI inside the analyzer; the findings are reproducible.</p>
+
+  <div class="note"><b>Why this wiki exists.</b> fallow is wired into how Claude works in this repo as a
+  <strong>better-than-grep</strong> tool for codebase intelligence. <code>CLAUDE.md</code> links into these pages with
+  "if X happens → use this". Start at the <a href="decision-tree.html">Decision tree</a>, keep the
+  <a href="reference.html">Reference</a> open, and read <a href="this-project.html">This project</a> for the
+  repo-specific setup.</p>
+
+  <h2 id="grep-vs-fallow">grep / ripgrep vs fallow <a class="anchor" href="#grep-vs-fallow">#</a></h2>
+  <p>They are complementary. Reach for the right one:</p>
+  <table>
+    <thead><tr><th>You want…</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td>Find a literal string / regex across files</td><td><code>rg</code> (ripgrep) — fallow is not a text matcher</td></tr>
+      <tr><td>Who imports this symbol? Why is it "used"?</td><td><code>fallow dead-code --trace FILE:EXPORT</code> · MCP <code>trace_export</code></td></tr>
+      <tr><td>Where is this dependency actually imported?</td><td><code>fallow dead-code --trace-dependency PKG</code> · MCP <code>trace_dependency</code></td></tr>
+      <tr><td>All import/export edges for a file</td><td><code>fallow dead-code --trace-file FILE</code> · MCP <code>trace_file</code></td></tr>
+      <tr><td>Is this export / file / dependency dead?</td><td><code>fallow dead-code</code> · MCP <code>analyze</code></td></tr>
+      <tr><td>Did this change add risk / dupes / boundary breaks?</td><td><code>fallow audit</code> · MCP <code>audit</code> / <code>check_changed</code></td></tr>
+      <tr><td>Where's the copy-paste?</td><td><code>fallow dupes</code> (suffix-array) · MCP <code>find_dupes</code></td></tr>
+      <tr><td>Complexity hotspots / refactor targets</td><td><code>fallow health --hotspots --targets</code> · MCP <code>check_health</code></td></tr>
+    </tbody>
+  </table>
+  <p class="muted small">fallow's own README: it gives agents "structured repo truth instead of forcing them to
+  infer everything from grep."</p>
+
+  <h2 id="install">Install &amp; run <a class="anchor" href="#install">#</a></h2>
+  <p>In <strong>this repo</strong> fallow is already installed as a dev dependency, so the local binary resolves automatically:</p>
+  <pre><code># this project (already set up)
+npx fallow --version
+
+# generic install options
+npm install --save-dev fallow      # CLI + LSP + MCP + Agent Skill + typed contract
+npx fallow dead-code               # run without installing
+cargo install fallow-cli           # Rust users (CLI only)</code></pre>
+
+  <h2 id="start">Quick start <a class="anchor" href="#start">#</a></h2>
+  <div class="cards">
+    <div class="card"><h3>Full sweep</h3><p>Cleanup + duplication + health for the whole repo.</p>
+      <pre><code>npx fallow --format json --quiet 2&gt;/dev/null || true</code></pre></div>
+    <div class="card"><h3>PR / change gate</h3><p>Only what your change introduced; pass/warn/fail verdict.</p>
+      <pre><code>npx fallow audit --format json --quiet 2&gt;/dev/null || true</code></pre></div>
+    <div class="card"><h3>Investigate one symbol</h3><p>Why is this export flagged? Who consumes it?</p>
+      <pre><code>npx fallow dead-code --trace lib/api/x.ts:foo \
+  --format json --quiet 2&gt;/dev/null || true</code></pre></div>
+  </div>
+
+  <div class="warn"><b>Three rules that bite agents.</b>
+  Always append <code>|| true</code> (exit&nbsp;1 = "issues found", not an error — only exit&nbsp;2 is a real failure).
+  Always use <code>--format json --quiet 2&gt;/dev/null</code> for parsing (never <code>2&gt;&amp;1</code>).
+  Never run <code>fallow watch</code> (interactive, never exits). Full list:
+  <a href="reference.html#agent-rules">Agent rules</a>.</div>
+
+  <h2 id="map">What's in this wiki <a class="anchor" href="#map">#</a></h2>
+  <div class="cards">
+    <div class="card"><h3><a href="reference.html">Reference</a></h3><p>Every command, the flags that matter, output formats, exit codes, env vars, and the agent rules.</p></div>
+    <div class="card"><h3><a href="decision-tree.html">Decision tree</a></h3><p>"If X happens → run this." The situation→tool map, plus fallow's fix / encode-exception / change-policy framework.</p></div>
+    <div class="card"><h3><a href="mcp-tools.html">MCP tools</a></h3><p>All 21 structured tools the <code>fallow-mcp</code> server exposes, and which one replaces which grep habit.</p></div>
+    <div class="card"><h3><a href="config-and-suppression.html">Config &amp; suppression</a></h3><p>The full <code>.fallowrc.jsonc</code> schema and the inline-suppression token table (the tokens differ per analysis).</p></div>
+    <div class="card"><h3><a href="this-project.html">This project</a></h3><p>Detected plugins, the tuned config and why, the current findings snapshot, and what's expected during phase&nbsp;3.</p></div>
+  </div>
+
+  <h2 id="canonical">Canonical sources <a class="anchor" href="#canonical">#</a></h2>
+  <ul class="tight">
+    <li>Live docs: <a href="https://docs.fallow.tools">docs.fallow.tools</a> · agent index <a href="https://docs.fallow.tools/llms.txt">/llms.txt</a></li>
+    <li>Repo: <a href="https://github.com/fallow-rs/fallow">github.com/fallow-rs/fallow</a> (MIT)</li>
+    <li>Version-matched agent skill shipped in the install:
+      <code>node_modules/fallow/skills/fallow/</code> (<code>SKILL.md</code> + <code>references/cli-reference.md</code>, <code>gotchas.md</code>, <code>patterns.md</code>) — the source of truth this wiki is distilled from.</li>
+    <li>Typed JSON contract: <code>import type { CheckOutput, HealthOutput, DupesOutput, AuditOutput } from "fallow/types"</code></li>
+  </ul>
+</main>
+<footer>fallow wiki · distilled from the v2.87.0 install (skills + schema) and docs.fallow.tools · this repo's setup: <a href="this-project.html">This project</a>.</footer>
+</body>
+</html>
