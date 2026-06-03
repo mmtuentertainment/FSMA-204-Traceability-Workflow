@@ -45,14 +45,11 @@ jobs:
       - name: Run fallow CI audit
         run: |
           if ! npx --no-install fallow --version >/dev/null 2>&1; then
-            echo "::error::fallow is not installed (expected via npm ci) - failing closed"
+            echo "::error::fallow is not installed (expected via npm ci)"
             exit 1
           fi
-          code=0
-          npm run fallow:ci -- --base origin/main || code=$?
-          if [ "$code" -eq 1 ]; then
-            echo "::warning::fallow audit found issues (exit 1) - not failing the job"
-          elif [ "$code" -ne 0 ]; then
-            echo "::error::fallow audit failed (exit $code)"
-            exit 1
-          fi
+          # fallow audit exit codes: 0 = pass/warn, 1 = verdict fail (error-severity
+          # findings), 2 = runtime error. Under `bash -eo pipefail` a non-zero exit fails
+          # the step, so warn-level findings pass while error-severity findings and runtime
+          # errors block the PR. Mirrors the local hook, which blocks on verdict=fail.
+          npm run fallow:ci -- --base origin/main
