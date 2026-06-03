@@ -61,7 +61,7 @@ touch git's own hooks and is not a CI gate.
 ## What This Adds
 
 - `npx fallow <command>` - dead-code, dupes, health, audit, fix, trace, list, explain, security, flags (see `docs/fallow/reference.html`).
-- A project-scoped MCP server (registered as `fallow`, runs the `fallow-mcp` binary; 21 structured tools) for Claude Code in this repo only.
+- A project-scoped MCP server (registered as `fallow`, runs the `fallow-mcp` binary; 22 structured tools) for Claude Code in this repo only.
 - A decision-rule layer in `CLAUDE.md` so the agent prefers fallow's graph truth over grep for structural questions.
 - An **agent commit gate**: `fallow audit` runs before any agent `git commit`/`git push` (Claude via `PreToolUse` hook, Codex via the `AGENTS.md` block). `gate=new-only`, so only findings introduced by the changeset block; inherited findings are reported but do not block. Reinforcement for agent commits — not a replacement for a CI gate.
 - The **fallow Agent Skill** in `.claude/skills/fallow/`, loaded on demand by Claude Code (complements the HTML wiki).

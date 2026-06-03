@@ -46,6 +46,10 @@
   </table>
 
   <h2 id="snapshot">Current findings snapshot <a class="anchor" href="#snapshot">#</a></h2>
+  <div class="note"><b>Measured against the full phase-3 tree.</b> These numbers come from the phase-3
+  provider-activation branch (where <code>lib/db/exception-review-provider.ts</code>, <code>tests/db/…</code> etc.
+  exist). The fallow tooling itself landed on a separate <code>chore/fallow-setup</code> branch off <code>main</code>,
+  which does not contain those files — a run there reports far fewer findings. Re-run on the integrated tree to refresh.</div>
   <table>
     <thead><tr><th>Signal</th><th>Zero-config</th><th>Tuned</th></tr></thead>
     <tbody>
@@ -96,16 +100,17 @@ npx fallow dead-code --trace lib/db/exception-review-provider.ts:reserveIdempote
     <li>This whole setup is documented as a batch in <code>ops/deltas/0053-fallow-setup.md</code>, per the repo's batch discipline.</li>
   </ul>
 
-  <h2 id="optional">Optional follow-ups (not yet done) <a class="anchor" href="#optional">#</a></h2>
+  <h2 id="optional">Follow-ups <a class="anchor" href="#optional">#</a></h2>
   <table>
-    <thead><tr><th>Add</th><th>Command / effect</th></tr></thead>
+    <thead><tr><th>Item</th><th>Status / effect</th></tr></thead>
     <tbody>
-      <tr><td>Agent commit gate</td><td><code>npx fallow hooks install --target agent</code> — a Claude Code <code>PreToolUse</code> hook runs <code>fallow audit</code> before <code>git commit</code>/<code>push</code> and blocks on <code>fail</code> (writes findings to stderr so the agent can fix and retry). Reinforces, not replaces, CI.</td></tr>
-      <tr><td>CI quality gate</td><td>Add <code>fallow audit --ci</code> (or the <code>fallow-rs/fallow@v2</code> Action) alongside the existing <code>npm run api:check / typecheck / build / test:*</code> gate.</td></tr>
-      <tr><td>Editor surfacing</td><td>The fallow VS Code extension uses the bundled <code>fallow-lsp</code> for inline findings + Code Lens.</td></tr>
+      <tr><td>Agent commit gate</td><td><span class="chip ok">Done</span> (<code>ops/deltas/0053</code>) — a Claude Code <code>PreToolUse</code> hook runs <code>fallow audit</code> before <code>git commit</code>/<code>push</code> and blocks on <code>verdict: fail</code> (writes findings to stderr so the agent can fix and retry). Reinforces, not replaces, CI.</td></tr>
+      <tr><td>CI quality gate</td><td><span class="chip ok">Done</span> (<code>ops/deltas/0054</code>) — <code>npm run fallow:ci</code> (<code>fallow audit --fail-on-issues --base origin/main</code>) in the Contract Gate workflow; fails the job on <code>verdict: fail</code> (exit 1) and runtime errors (exit 2); warn-level findings pass.</td></tr>
+      <tr><td>Tighten <code>unused-*</code> to <code>error</code></td><td>Not yet — do it as the product leaves scaffold stage and the provider routes get wired.</td></tr>
+      <tr><td>Editor surfacing</td><td>Optional — the fallow VS Code extension uses the bundled <code>fallow-lsp</code> for inline findings + Code Lens.</td></tr>
     </tbody>
   </table>
 </main>
-<footer>Snapshot taken at fallow v2.87.0 against this working tree. Re-run the commands above to refresh — numbers move as phase 3 wires the provider in.</footer>
+<footer>Snapshot taken at fallow v2.87.0 against the full phase-3 tree (not the tooling-only <code>chore/fallow-setup</code> branch, which lacks the provider/test files). Re-run the commands above to refresh — numbers move as phase 3 wires the provider in.</footer>
 </body>
 </html>

@@ -18,15 +18,19 @@
     "tests/**/*.mjs"
   ],
 
-  // --- Globally ignored: generated / vendored code ----------------------
-  // Never analyze machine-generated output for any signal.
+  // --- Globally ignored: generated / vendored / non-code ----------------
+  // Never analyze machine-generated output or hand-authored docs for code signals.
   //  - lib/api/generated/** : openapi-typescript output (`npm run api:types`)
   //  - lib/db/migrations/**  : drizzle-kit generated SQL + meta snapshots
   //  - next-env.d.ts         : Next.js generated ambient types
+  //  - docs/**               : the fallow HTML/CSS wiki — documentation, not analyzable
+  //                            source. Also stops the wiki's own suppression-syntax
+  //                            examples from registering as stale-suppression findings.
   "ignorePatterns": [
     "lib/api/generated/**",
     "lib/db/migrations/**",
-    "next-env.d.ts"
+    "next-env.d.ts",
+    "docs/**"
   ],
 
   // --- Duplication -------------------------------------------------------

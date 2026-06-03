@@ -46,7 +46,7 @@ this repo's setup **[`docs/fallow/this-project.html`](docs/fallow/this-project.h
 
 ### MCP server (project-scoped)
 
-`fallow-mcp` is registered in repo-root [`.mcp.json`](.mcp.json) — available **only in this project**. It exposes 21
+`fallow-mcp` is registered in repo-root [`.mcp.json`](.mcp.json) — available **only in this project**. It exposes 22
 structured tools (`trace_export`, `trace_dependency`, `trace_file`, `analyze`, `check_changed`, `audit`, …). Full
 list: [mcp-tools.html](docs/fallow/mcp-tools.html). If the server isn't loaded, every tool has a CLI equivalent.
 
@@ -57,3 +57,20 @@ duplication/health; generated code (`lib/api/generated/**`, `lib/db/migrations/*
 `warn` (scaffold stage), structural rules are `error`. **Tighten `unused-*` back to `error` as the product matures.**
 Current findings snapshot and what's expected during phase 3: [this-project.html](docs/fallow/this-project.html).
 `.fallow/` (cache) is gitignored. Setup batch: `ops/deltas/0053-fallow-setup.md`.
+
+### Commit gates (agent + CI)
+
+Two gates run `fallow audit` so structural regressions get caught:
+
+- **Agent gate** — a Claude Code `PreToolUse` hook (`.claude/hooks/fallow-gate.sh`, wired in `.claude/settings.json`)
+  runs `fallow audit` before every `git commit`/`git push` and **blocks on `verdict: fail`** (findings to stderr so you
+  can fix + retry). Needs `bash` + `jq` + `fallow`; if `jq`/`fallow` are missing it **fails open** (skips with a
+  notice). To disable, remove the `PreToolUse` block from `.claude/settings.json`. A matching Codex block lives in
+  `AGENTS.md`. Setup: `ops/deltas/0053-fallow-setup.md`.
+- **CI gate** — the Contract Gate workflow runs `npm run fallow:ci` (`fallow audit --fail-on-issues --base
+  origin/main`). It **fails the job on `verdict: fail` (exit 1) and runtime errors (exit 2)**; warn-level findings
+  (exit 0) pass. Setup: `ops/deltas/0054-fallow-ci-audit.md`.
+
+> **Exit-code nuance** (the source of a real bug, now fixed): for *ad-hoc* `fallow` runs, exit 1 just means "issues
+> found" — append `|| true` (agent rule #2). For the **gates**, exit 1 = `verdict: fail` = the block-worthy signal.
+> Both are correct in their own context; don't conflate them. (`pass`/`warn` → 0, `fail` → 1, runtime error → 2.)
