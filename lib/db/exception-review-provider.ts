@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 
 import type { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
 
+import { stableStringify } from "../shared/canonical-json.ts";
+
 export const EXCEPTION_REVIEW_OPERATION = "exception.review.update";
 export const TRACEABILITY_EXCEPTION_RESOURCE_TYPE = "traceability_exception";
 
@@ -775,28 +777,4 @@ function sanitizeReplayHeaders(
   }
 
   return sanitized;
-}
-
-function stableStringify(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`;
-  }
-
-  if (isPlainObject(value)) {
-    return `{${Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
-      .join(",")}}`;
-  }
-
-  return JSON.stringify(value);
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    Object.getPrototypeOf(value) === Object.prototype
-  );
 }

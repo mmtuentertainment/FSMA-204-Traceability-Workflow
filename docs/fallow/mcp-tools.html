@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fallow — MCP tools</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topnav">
+  <span class="brand">fallow<span class="v">&nbsp;wiki · v2.87</span></span>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="reference.html">Reference</a>
+    <a href="decision-tree.html">Decision tree</a>
+    <a href="mcp-tools.html" class="active">MCP tools</a>
+    <a href="config-and-suppression.html">Config &amp; suppression</a>
+    <a href="this-project.html">This project</a>
+  </nav>
+</header>
+<main>
+  <h1>MCP tools — <code>fallow-mcp</code></h1>
+  <p class="lede">The <code>fallow-mcp</code> stdio server exposes fallow as 22 structured tools. In this repo it's wired
+  <strong>project-scoped</strong> (in <code>.mcp.json</code> at the repo root), so it's available to Claude Code here
+  and does not affect fallow/MCP in any other project. These tools are the real "better than grep" surface — they
+  return graph truth, not text.</p>
+
+  <div class="note"><b>Project-scoped setup (already done here).</b> Repo-root <code>.mcp.json</code>:
+  <pre><code>{
+  "mcpServers": {
+    "fallow": {
+      "command": "npx",
+      "args": ["fallow-mcp"],
+      "env": { "FALLOW_AGENT_SOURCE": "claude_code" }
+    }
+  }
+}</code></pre>
+  <code>npx</code> resolves the dev-dependency binary (<code>node_modules/.bin/fallow-mcp</code>).
+  <code>FALLOW_AGENT_SOURCE</code> is attribution only — it never enables telemetry and uploads no code.
+  Reload the MCP servers (or restart the session) for Claude Code to pick it up.</div>
+
+  <h2 id="grep-map">grep habit → MCP tool <a class="anchor" href="#grep-map">#</a></h2>
+  <table>
+    <thead><tr><th>Old grep habit</th><th>MCP tool</th></tr></thead>
+    <tbody>
+      <tr><td><code>rg "import.*Foo"</code> to find who uses <code>Foo</code></td><td><code>trace_export</code> — resolves re-export chains &amp; barrels</td></tr>
+      <tr><td><code>rg "from 'lodash'"</code> to find a dep's call sites</td><td><code>trace_dependency</code></td></tr>
+      <tr><td>grep around to see what a file pulls in</td><td><code>trace_file</code></td></tr>
+      <tr><td>eyeballing for unused code</td><td><code>analyze</code></td></tr>
+      <tr><td>guessing if a PR is risky</td><td><code>audit</code> / <code>check_changed</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="tools">All tools <a class="anchor" href="#tools">#</a></h2>
+
+  <h3>Investigate (the grep replacements)</h3>
+  <table>
+    <thead><tr><th>Tool</th><th>Answers</th><th>Key params</th></tr></thead>
+    <tbody>
+      <tr><td><code>trace_export</code></td><td>Usage chain for one export — who imports it, why used/unused</td><td><code>file</code>, <code>export_name</code></td></tr>
+      <tr><td><code>trace_file</code></td><td>Graph edges for a single file</td><td><code>file</code></td></tr>
+      <tr><td><code>trace_dependency</code></td><td>Every import location of a package</td><td><code>package_name</code></td></tr>
+      <tr><td><code>project_info</code></td><td>Entry points, files, plugins, boundary zones</td><td><code>entry_points</code>, <code>files</code>, <code>plugins</code>, <code>boundaries</code></td></tr>
+      <tr><td><code>list_boundaries</code></td><td>Architecture zone config</td><td>config params</td></tr>
+      <tr><td><code>fallow_explain</code></td><td>Docs for an issue type (no analysis)</td><td><code>issue_type</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Analyze</h3>
+  <table>
+    <thead><tr><th>Tool</th><th>Does</th><th>Key params</th></tr></thead>
+    <tbody>
+      <tr><td><code>analyze</code></td><td>Dead-code across exports/files/deps</td><td><code>issue_types</code>, <code>production</code>, <code>group_by</code></td></tr>
+      <tr><td><code>check_changed</code></td><td>Incremental analysis of modified files</td><td><code>changed_since</code>, <code>issue_types</code></td></tr>
+      <tr><td><code>find_dupes</code></td><td>Duplication via suffix arrays</td><td><code>changed_since</code>, <code>min_occurrences</code></td></tr>
+      <tr><td><code>trace_clone</code></td><td>Deep-dive a duplicate group</td><td><code>file</code>, <code>line</code>, <code>fingerprint</code>, <code>mode</code></td></tr>
+      <tr><td><code>check_health</code></td><td>Complexity, hotspots, targets</td><td><code>file_scores</code>, <code>hotspots</code>, <code>targets</code>, <code>coverage</code></td></tr>
+      <tr><td><code>audit</code></td><td>Combined changed-file gate (verdict)</td><td><code>base</code>, <code>gate</code>, <code>coverage</code></td></tr>
+      <tr><td><code>feature_flags</code></td><td>Feature-flag pattern detection</td><td><code>top</code></td></tr>
+      <tr><td><code>security_candidates</code></td><td>Local security candidates (verify before acting)</td><td><code>root</code>, <code>config</code>, <code>changed_since</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Act (destructive — confirm first)</h3>
+  <table>
+    <thead><tr><th>Tool</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr><td><code>fix_preview</code></td><td>Dry-run of auto-fix (no writes)</td></tr>
+      <tr><td><code>fix_apply</code></td><td>Apply auto-fixes — edits source files; preview &amp; confirm first, then run tests</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Runtime &amp; impact <span class="muted small">(runtime tools need the optional paid layer; impact is local)</span></h3>
+  <table>
+    <thead><tr><th>Tool</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr><td><code>check_runtime_coverage</code></td><td>Merge V8/Istanbul coverage into health</td></tr>
+      <tr><td><code>get_hot_paths</code></td><td>Production hotspot analysis</td></tr>
+      <tr><td><code>get_blast_radius</code></td><td>Change impact assessment</td></tr>
+      <tr><td><code>get_importance</code></td><td>Production importance scoring</td></tr>
+      <tr><td><code>get_cleanup_candidates</code></td><td>Safety assessment for removals</td></tr>
+      <tr><td><code>impact</code></td><td>Local Fallow Impact value tracking (read-only)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip"><b>CLI fallback.</b> If the MCP server isn't loaded, every tool has a CLI equivalent — see the
+  <a href="reference.html">Reference</a>. e.g. <code>trace_export</code> ≡ <code>fallow dead-code --trace FILE:EXPORT</code>.</div>
+</main>
+<footer>Tool list current as of the v2.87.0 MCP server. Setup &amp; tool details: <a href="https://docs.fallow.tools/integrations/mcp">docs.fallow.tools/integrations/mcp</a>.</footer>
+</body>
+</html>

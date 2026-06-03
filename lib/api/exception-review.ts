@@ -4,6 +4,7 @@ import {
   FixtureAuditSink,
   FixtureIdempotencyStore,
 } from "../security/idempotency-audit.ts";
+import { isPlainObject, stableStringify } from "../shared/canonical-json.ts";
 
 export type ExceptionRecord = components["schemas"]["ExceptionRecord"];
 export type ExceptionPatch = components["schemas"]["ExceptionPatch"];
@@ -155,28 +156,4 @@ export async function readExceptionPatch(
 
 export function requestFingerprint(value: unknown): string {
   return stableStringify(value);
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    Object.getPrototypeOf(value) === Object.prototype
-  );
-}
-
-function stableStringify(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`;
-  }
-
-  if (isPlainObject(value)) {
-    return `{${Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
-      .join(",")}}`;
-  }
-
-  return JSON.stringify(value);
 }

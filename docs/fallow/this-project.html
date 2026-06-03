@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fallow — this project (FSMA 204)</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topnav">
+  <span class="brand">fallow<span class="v">&nbsp;wiki · v2.87</span></span>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="reference.html">Reference</a>
+    <a href="decision-tree.html">Decision tree</a>
+    <a href="mcp-tools.html">MCP tools</a>
+    <a href="config-and-suppression.html">Config &amp; suppression</a>
+    <a href="this-project.html" class="active">This project</a>
+  </nav>
+</header>
+<main>
+  <h1>This project — FSMA 204 Workflow Product</h1>
+  <p class="lede">How fallow is set up here, why the config is tuned the way it is, and what the current findings mean.
+  Stack: <span class="chip">Next.js 16</span><span class="chip">React 19</span><span class="chip">Drizzle ORM + pg</span>
+  <span class="chip">OpenAPI-first</span><span class="chip">TypeScript 5.9 · Node ≥22.6</span>. Posture: pre-production
+  scaffold, phase&nbsp;3 (provider activation) in progress.</p>
+
+  <h2 id="detected">What fallow detected (zero-config) <a class="anchor" href="#detected">#</a></h2>
+  <p><b>Plugins:</b> <span class="chip ok">nextjs</span><span class="chip ok">typescript</span>
+  <span class="chip ok">drizzle</span><span class="chip ok">openapi-ts</span> — all auto-detected, no config needed.</p>
+  <p><b>Entry points (reachability roots):</b> Next.js routes under <code>app/api/…</code> + <code>app/layout.tsx</code>/<code>page.tsx</code>,
+  <code>drizzle.config.ts</code> + <code>lib/db/schema.ts</code>, the openapi-generated types, the script-run tests, and
+  (added by config) all <code>tests/**</code> test files.</p>
+
+  <h2 id="config">The tuned config &amp; why <a class="anchor" href="#config">#</a></h2>
+  <p>Config lives in <code>.fallowrc.jsonc</code> at the repo root (commented so each choice carries its reason). Summary:</p>
+  <table>
+    <thead><tr><th>Setting</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>entry: ["tests/**/*.test.ts", "…test.mts", "…/*.mjs"]</code></td><td><b>The key fix.</b> The provider tests (<code>tests/db/exception-review-provider-a1/a2.test.ts</code>) aren't referenced by every npm script, so fallow saw them as unreachable — flagging the test files as unused <em>and</em> cascade-flagging every provider/fixture export they consume. Declaring test globs as roots makes the graph match reality. Resolved 3 false "unused files" + 6 false "unused exports".</td></tr>
+      <tr><td><code>ignorePatterns: lib/api/generated/** , lib/db/migrations/** , next-env.d.ts</code></td><td>Machine-generated output (openapi-typescript, drizzle-kit, Next.js) — never analyze it.</td></tr>
+      <tr><td><code>duplicates.ignore: ["tests/**"]</code></td><td>Tests legitimately repeat arrange/act/assert + fixture setup. This was the explicit ask — it dropped duplication from <b>6.9% (9 groups)</b> to <b>2.2% (2 groups)</b>.</td></tr>
+      <tr><td><code>health.ignore: ["tests/**"]</code></td><td>Test <code>run()</code> bodies are long sequential assertion lists (high cyclomatic, ~zero cognitive) — not real complexity hotspots.</td></tr>
+      <tr><td><code>rules</code>: <code>unused-*</code> → <code>warn</code>; structural rules → <code>error</code></td><td>This is a scaffold — staged-but-unwired code is expected (per <code>AGENTS.md</code>). Surface unused-* as warnings; keep circular / unresolved / unlisted / duplicate-export / boundary as hard errors. <b>Tighten unused-* back to <code>error</code> as the product leaves scaffold stage.</b></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="snapshot">Current findings snapshot <a class="anchor" href="#snapshot">#</a></h2>
+  <div class="note"><b>Measured against the full phase-3 tree.</b> These numbers come from the phase-3
+  provider-activation branch (where <code>lib/db/exception-review-provider.ts</code>, <code>tests/db/…</code> etc.
+  exist). The fallow tooling itself landed on a separate <code>chore/fallow-setup</code> branch off <code>main</code>,
+  which does not contain those files — a run there reports far fewer findings. Re-run on the integrated tree to refresh.</div>
+  <table>
+    <thead><tr><th>Signal</th><th>Zero-config</th><th>Tuned</th></tr></thead>
+    <tbody>
+      <tr><td>Unused files</td><td>3</td><td><span class="chip ok">0</span></td></tr>
+      <tr><td>Unused exports</td><td>20</td><td><span class="chip warn">14</span> (real staged exports — warn)</td></tr>
+      <tr><td>Circular / unresolved / unlisted / dup-export / boundary</td><td>0</td><td><span class="chip ok">0</span> — error-gate clean</td></tr>
+      <tr><td>Duplication</td><td>6.9% / 9 groups</td><td><span class="chip ok">2.2% / 2 groups</span></td></tr>
+      <tr><td>Health (complexity findings / maintainability)</td><td>14 / 90</td><td><span class="chip ok">5 / 92.2</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note"><b>The remaining findings are real, not false positives</b> — they reflect the genuine phase-3 state,
+  so they're left visible (fallow's advice: don't hide real issues behind ignores).</div>
+
+  <h3>What's expected to remain during provider activation</h3>
+  <ul class="tight">
+    <li><b>14 unused exports (warn)</b> — fixture constants and provider functions staged ahead of being wired into a
+      route, in <code>lib/db/exception-review-provider.ts</code> (e.g. <code>reviewTraceabilityExceptionWithProvider</code>,
+      <code>reserveIdempotencyRecord</code>, <code>appendExceptionReviewAuditEvent</code>), plus
+      <code>lib/api/{exception-review,mock-recall,problem,route-boundary}.ts</code> and
+      <code>lib/security/{idempotency-audit,request-context}.ts</code>. As each gets wired into a handler, its warning
+      disappears on its own. <b>Trace before deleting any of them</b> — they're consumed by tests today.</li>
+    <li><b>2 duplication groups</b> — <code>lib/api/exception-review.ts</code> ↔ <code>lib/db/exception-review-provider.ts</code>:
+      the provider mirrors the fixture-repo logic during migration. Expected to converge; suppress with
+      <code>// fallow-ignore-file code-duplication</code> only if it's intentionally permanent.</li>
+    <li><b>5 complexity findings</b> — the provider's idempotency/tenant logic + the route PATCH handler. Genuine
+      production complexity worth tracking; not noise.</li>
+  </ul>
+
+  <h2 id="run">How to run it here <a class="anchor" href="#run">#</a></h2>
+  <pre><code># full sweep (combined)
+npx fallow --format json --quiet 2&gt;/dev/null || true
+
+# gate your current change before committing
+npx fallow audit --format json --quiet --explain 2&gt;/dev/null || true
+
+# why is an export flagged? (consumed by tests today)
+npx fallow dead-code --trace lib/db/exception-review-provider.ts:reserveIdempotencyRecord \
+  --format json --quiet 2&gt;/dev/null || true</code></pre>
+
+  <h2 id="setup-notes">Setup notes <a class="anchor" href="#setup-notes">#</a></h2>
+  <ul class="tight">
+    <li>Installed as a <b>dev dependency</b> (<code>fallow ^2.87.0</code>) — brings the CLI, LSP, MCP server, a
+      version-matched Claude Code Agent Skill (<code>node_modules/fallow/skills/fallow/</code>), and the typed contract
+      (<code>fallow/types</code>).</li>
+    <li>MCP server wired <b>project-scoped</b> in repo-root <code>.mcp.json</code> (does not affect other projects). See
+      <a href="mcp-tools.html">MCP tools</a>.</li>
+    <li><code>.fallow/</code> (local cache / impact / snapshots) is gitignored.</li>
+    <li>This whole setup is documented as a batch in <code>ops/deltas/0053-fallow-setup.md</code>, per the repo's batch discipline.</li>
+  </ul>
+
+  <h2 id="optional">Follow-ups <a class="anchor" href="#optional">#</a></h2>
+  <table>
+    <thead><tr><th>Item</th><th>Status / effect</th></tr></thead>
+    <tbody>
+      <tr><td>Agent commit gate</td><td><span class="chip ok">Done</span> (<code>ops/deltas/0053</code>) — a Claude Code <code>PreToolUse</code> hook runs <code>fallow audit</code> before <code>git commit</code>/<code>push</code> and blocks on <code>verdict: fail</code> (writes findings to stderr so the agent can fix and retry). Reinforces, not replaces, CI.</td></tr>
+      <tr><td>CI quality gate</td><td><span class="chip ok">Done</span> (<code>ops/deltas/0054</code>) — <code>npm run fallow:ci</code> (<code>fallow audit --fail-on-issues --base origin/main</code>) in the Contract Gate workflow; fails the job on <code>verdict: fail</code> (exit 1) and runtime errors (exit 2); warn-level findings pass.</td></tr>
+      <tr><td>Tighten <code>unused-*</code> to <code>error</code></td><td>Not yet — do it as the product leaves scaffold stage and the provider routes get wired.</td></tr>
+      <tr><td>Editor surfacing</td><td>Optional — the fallow VS Code extension uses the bundled <code>fallow-lsp</code> for inline findings + Code Lens.</td></tr>
+    </tbody>
+  </table>
+</main>
+<footer>Snapshot taken at fallow v2.87.0 against the full phase-3 tree (not the tooling-only <code>chore/fallow-setup</code> branch, which lacks the provider/test files). Re-run the commands above to refresh — numbers move as phase 3 wires the provider in.</footer>
+</body>
+</html>
