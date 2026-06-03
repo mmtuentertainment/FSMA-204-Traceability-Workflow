@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fallow — decision tree</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topnav">
+  <span class="brand">fallow<span class="v">&nbsp;wiki · v2.87</span></span>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="reference.html">Reference</a>
+    <a href="decision-tree.html" class="active">Decision tree</a>
+    <a href="mcp-tools.html">MCP tools</a>
+    <a href="config-and-suppression.html">Config &amp; suppression</a>
+    <a href="this-project.html">This project</a>
+  </nav>
+</header>
+<main>
+  <h1>Decision tree — "if X, use this"</h1>
+  <p class="lede">The map <code>CLAUDE.md</code> points into. Two layers: which tool to reach for in a given
+  situation, then — once fallow reports something — how to decide what to do about it.</p>
+
+  <h2 id="reach">Layer 1 — which tool for the question <a class="anchor" href="#reach">#</a></h2>
+  <table>
+    <thead><tr><th>If you need to…</th><th>Run / call</th><th>More</th></tr></thead>
+    <tbody>
+      <tr><td>Find a literal string or regex</td><td><code>rg</code> (ripgrep) — <em>not</em> fallow</td><td class="muted">fallow is structural, not textual</td></tr>
+      <tr><td>Know <b>who imports a symbol</b> / why it's "used"</td><td><code>fallow dead-code --trace FILE:EXPORT</code><br>MCP <code>trace_export</code></td><td><a href="reference.html#trace">trace</a></td></tr>
+      <tr><td>Know <b>where a dependency is imported</b></td><td><code>fallow dead-code --trace-dependency PKG</code><br>MCP <code>trace_dependency</code></td><td><a href="reference.html#trace">trace</a></td></tr>
+      <tr><td>See <b>all edges for a file</b></td><td><code>fallow dead-code --trace-file FILE</code><br>MCP <code>trace_file</code></td><td><a href="reference.html#trace">trace</a></td></tr>
+      <tr><td>Check if code is <b>dead / unused</b> before deleting</td><td><code>fallow dead-code</code> · MCP <code>analyze</code></td><td><a href="reference.html#dead-code">dead-code</a></td></tr>
+      <tr><td>Review a <b>change / PR / your own edits</b> for new risk</td><td><code>fallow audit</code> · MCP <code>audit</code>/<code>check_changed</code></td><td><a href="reference.html#audit">audit</a></td></tr>
+      <tr><td>Find <b>copy-paste</b> before refactoring</td><td><code>fallow dupes</code> · MCP <code>find_dupes</code></td><td><a href="reference.html#dupes">dupes</a></td></tr>
+      <tr><td>Pick a <b>refactor target</b> / find hotspots</td><td><code>fallow health --hotspots --targets</code> · MCP <code>check_health</code></td><td><a href="reference.html#health">health</a></td></tr>
+      <tr><td>Understand <b>what a rule means</b></td><td><code>fallow explain &lt;rule&gt;</code> · MCP <code>fallow_explain</code></td><td><a href="reference.html#explain">explain</a></td></tr>
+      <tr><td>See detected <b>plugins / entry points / boundaries</b></td><td><code>fallow list --plugins|--entry-points|--boundaries</code> · MCP <code>project_info</code></td><td><a href="reference.html#list">list</a></td></tr>
+      <tr><td><b>Auto-remove</b> unused exports/deps</td><td><code>fallow fix --dry-run</code> → <code>--yes</code> · MCP <code>fix_preview</code>/<code>fix_apply</code></td><td><a href="reference.html#fix">fix</a></td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>Before deleting any "unused" export/file, trace it first.</b> fallow is syntactic (oxc, no TS
+  compiler): fully dynamic <code>import(variable)</code>, reflection, and runtime-only consumers are invisible to it.
+  A trace that comes back "used" means add a suppression; "not used" means it's safe. Never delete on the strength
+  of the summary alone.</div>
+
+  <h2 id="decide">Layer 2 — what to do with a finding <a class="anchor" href="#decide">#</a></h2>
+  <p>fallow's own framework (from its compliance guide). For every finding, choose exactly one:</p>
+  <div class="cards">
+    <div class="card"><h3>1 · Fix it now</h3>
+      <p>The finding is real and the behavior is safe to preserve by editing code.</p>
+      <ul class="tight"><li>delete the unused file/export</li><li>remove the unused dependency</li><li>extract / simplify a function over threshold</li><li>consolidate duplicated logic</li></ul></div>
+    <div class="card"><h3>2 · Encode it as an exception</h3>
+      <p>The code must stay, but fallow can't infer that from syntax. Use the <b>narrowest</b> mechanism and say why.</p>
+      <ul class="tight"><li>inline suppression for one line/file</li><li><code>ignoreExports</code> for one export</li><li><code>ignoreDependencies</code> for one dep</li><li><code>dynamicallyLoaded</code> / <code>publicPackages</code> for runtime/library surfaces</li><li><code>ignorePatterns</code> only for generated/out-of-scope files (last resort)</li></ul></div>
+    <div class="card"><h3>3 · Change the policy</h3>
+      <p>It's not one bad file — a repo-wide standard should differ. Do this deliberately, documented.</p>
+      <ul class="tight"><li>adjust a complexity threshold in <code>health</code></li><li>change a rule's severity in <code>rules</code></li><li>model a framework convention once in config</li></ul>
+      <p class="muted small">Don't raise thresholds globally just to hide a few hotspots.</p></div>
+  </div>
+  <div class="note"><b>Preference order for exceptions (narrow → broad):</b>
+  inline <code>// fallow-ignore-next-line</code> → <code>ignoreExports</code> / <code>ignoreDependencies</code> →
+  <code>dynamicallyLoaded</code> / <code>publicPackages</code> / <code>ignoreDecorators</code> →
+  <code>ignorePatterns</code>. Always document the reason. Details + the
+  <a href="config-and-suppression.html#tokens">token table</a> on Config &amp; suppression.</div>
+
+  <h2 id="situations">Situation recipes <a class="anchor" href="#situations">#</a></h2>
+  <table>
+    <thead><tr><th>Situation</th><th>Do</th></tr></thead>
+    <tbody>
+      <tr><td>fallow flags an export that's consumed only by a <b>dynamic import / reflection</b></td><td>Trace it; if real, <code>// fallow-ignore-next-line unused-export</code> (or <code>dynamicallyLoaded</code> for whole files).</td></tr>
+      <tr><td>fallow flags an export consumed by an <b>external package</b> not in this repo</td><td>JSDoc <code>/** @public */</code> on the export, or <code>publicPackages</code> for a whole library package.</td></tr>
+      <tr><td>Two files legitimately <b>duplicate</b> (intentional parallel during migration)</td><td><code>// fallow-ignore-file code-duplication</code>, or leave visible + document if temporary.</td></tr>
+      <tr><td>A complex function is intentionally complex</td><td><code>// fallow-ignore-next-line complexity</code> (narrow), not a global threshold bump.</td></tr>
+      <tr><td>Tests show up as unused files / inflate duplication or complexity</td><td>Declare test globs in <code>entry</code> (reachability) + <code>duplicates.ignore</code> / <code>health.ignore</code> for <code>tests/**</code>. <span class="muted">(Already configured here.)</span></td></tr>
+      <tr><td>A devDep is flagged unused but is used via CLI/config only</td><td>Usually auto-detected from package scripts/plugins; if not, <code>ignoreDependencies</code>.</td></tr>
+      <tr><td>A suppression comment is reported as <b>stale</b></td><td>The issue it hid is gone — delete the comment. (Keeps suppressions honest.)</td></tr>
+      <tr><td>You want an export kept but to be <b>warned if it becomes used</b></td><td>JSDoc <code>/** @expected-unused */</code> instead of a plain ignore.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="loop">Adoption loop <a class="anchor" href="#loop">#</a></h2>
+  <ol>
+    <li>Run <code>fallow</code> (or the relevant subcommand) to see current state.</li>
+    <li>Fix straightforward real issues.</li>
+    <li>For each remaining finding pick Fix / Encode / Change-policy (above).</li>
+    <li>Re-run after each batch.</li>
+    <li>Once repo-wide state is intentional, use <code>fallow audit</code> as the change gate.</li>
+  </ol>
+</main>
+<footer>Layer 2 framework from fallow's compliance guide (<code>docs/fallow-compliance.md</code>). See also <a href="this-project.html">This project</a> for how these rules are already applied here.</footer>
+</body>
+</html>

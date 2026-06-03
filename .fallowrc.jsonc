@@ -1,0 +1,66 @@
+{
+  // Fallow configuration — codebase intelligence for this TS/JS repo.
+  // Docs for every key below: docs/fallow/reference.html  (or https://docs.fallow.tools)
+  // Editing rule (fallow's own guidance): prefer the NARROWEST mechanism that
+  // matches the reason, and document WHY next to every exception.
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+
+  // --- Entry points (reachability roots) --------------------------------
+  // Test files exercise lib/ and app/ code but are not referenced by every
+  // package.json script, so fallow would otherwise (a) report the test files
+  // themselves as "unused files" and (b) cascade-flag every lib export they
+  // consume as an "unused export". Declaring the test globs as entry points
+  // makes fallow's graph match reality. This is ADDITIVE to the framework
+  // plugins' auto-detected entries (Next.js routes, drizzle schema, etc.).
+  "entry": [
+    "tests/**/*.test.ts",
+    "tests/**/*.test.mts",
+    "tests/**/*.mjs"
+  ],
+
+  // --- Globally ignored: generated / vendored code ----------------------
+  // Never analyze machine-generated output for any signal.
+  //  - lib/api/generated/** : openapi-typescript output (`npm run api:types`)
+  //  - lib/db/migrations/**  : drizzle-kit generated SQL + meta snapshots
+  //  - next-env.d.ts         : Next.js generated ambient types
+  "ignorePatterns": [
+    "lib/api/generated/**",
+    "lib/db/migrations/**",
+    "next-env.d.ts"
+  ],
+
+  // --- Duplication -------------------------------------------------------
+  // Test files legitimately repeat arrange/act/assert and fixture-setup
+  // structure across cases (here, 6 of 9 zero-config clone groups were
+  // test-to-test). Excluding tests/ keeps the duplication report focused on
+  // real production copy-paste. (.next/, out/, etc. are already excluded by
+  // fallow's built-in generated-output defaults.)
+  "duplicates": {
+    "ignore": ["tests/**"]
+  },
+
+  // --- Complexity / health ----------------------------------------------
+  // Test "run()" bodies are long sequential assertion lists (high cyclomatic,
+  // near-zero cognitive) — not meaningful refactor targets. Keep complexity
+  // signal pointed at production code.
+  "health": {
+    "ignore": ["tests/**"]
+  },
+
+  // --- Rule severity policy ---------------------------------------------
+  // This is a pre-production, OpenAPI-first scaffold (see AGENTS.md): code
+  // that is staged but not yet wired into a route/script is EXPECTED. So
+  // unused-* findings are surfaced as WARNINGS (visible, non-blocking) while
+  // structural-correctness rules stay HARD ERRORS. Tighten the unused-* rules
+  // back to "error" once the product graduates from scaffold stage.
+  "rules": {
+    "unused-files": "warn",
+    "unused-exports": "warn",
+    "unused-types": "warn",
+    "circular-dependencies": "error",
+    "unresolved-imports": "error",
+    "unlisted-dependencies": "error",
+    "duplicate-exports": "error",
+    "boundary-violation": "error"
+  }
+}

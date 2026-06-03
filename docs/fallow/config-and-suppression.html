@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fallow — config &amp; suppression</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topnav">
+  <span class="brand">fallow<span class="v">&nbsp;wiki · v2.87</span></span>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="reference.html">Reference</a>
+    <a href="decision-tree.html">Decision tree</a>
+    <a href="mcp-tools.html">MCP tools</a>
+    <a href="config-and-suppression.html" class="active">Config &amp; suppression</a>
+    <a href="this-project.html">This project</a>
+  </nav>
+</header>
+<main>
+  <h1>Config &amp; suppression</h1>
+  <p class="lede">The <code>.fallowrc.jsonc</code> schema and the inline-suppression tokens. Golden rule from fallow:
+  prefer the <strong>narrowest</strong> mechanism that matches the reason, and document <em>why</em> next to it.
+  See this repo's actual config on <a href="this-project.html">This project</a>.</p>
+
+  <div class="note"><b>Config file forms.</b> <code>.fallowrc.json</code>, <code>.fallowrc.jsonc</code> (comments allowed —
+  preferred so exceptions carry their reason), or <code>fallow.toml</code>. Add
+  <code>"$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json"</code> for editor
+  autocomplete. <b>fallow needs zero config</b> for most repos (118 auto-detecting plugins) — only add a key when a
+  real false positive or policy choice requires it.</div>
+
+  <h2 id="keys">Top-level keys <a class="anchor" href="#keys">#</a></h2>
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Use it for</th></tr></thead>
+    <tbody>
+      <tr><td><code>entry</code></td><td>string[]</td><td>Extra reachability roots (globs) not auto-detected — e.g. test files, custom runners. <b>Additive</b> to plugin entries.</td></tr>
+      <tr><td><code>ignorePatterns</code></td><td>string[]</td><td>Files excluded from <em>all</em> analysis (generated/vendored code). Broadest tool — last resort.</td></tr>
+      <tr><td><code>ignoreDependencies</code></td><td>string[]</td><td>Packages excluded from unused <em>and</em> unlisted detection (runtime-provided, CLI-only tooling).</td></tr>
+      <tr><td><code>ignoreUnresolvedImports</code></td><td>string[]</td><td>Import specifiers to not report as unresolved.</td></tr>
+      <tr><td><code>ignoreExports</code></td><td>{file, exports[]}[]</td><td>Specific exports to keep (<code>"*"</code> = all in file). Narrower than ignoring the file.</td></tr>
+      <tr><td><code>ignoreExportsUsedInFile</code></td><td>bool | {type,interface}</td><td>Don't flag exports that are also used within their own file.</td></tr>
+      <tr><td><code>ignoreDecorators</code></td><td>string[]</td><td>Utility decorators (<code>@step</code>, <code>@log</code>) that do <em>not</em> imply reflective use, so their members get checked.</td></tr>
+      <tr><td><code>usedClassMembers</code></td><td>(string | scoped)[]</td><td>Member names a framework invokes at runtime (treat as used). Scoped form constrains by <code>extends</code>/<code>implements</code>.</td></tr>
+      <tr><td><code>dynamicallyLoaded</code></td><td>string[]</td><td>Files loaded at runtime (plugins, locales, lazy modules) — marked always-used. Preferred over per-file ignores.</td></tr>
+      <tr><td><code>publicPackages</code></td><td>string[]</td><td>Monorepo packages whose exports are a public API consumed externally. Better than tagging every export.</td></tr>
+      <tr><td><code>framework</code> / <code>plugins</code></td><td>plugin[] / string[]</td><td>Inline custom framework definitions / external plugin dirs.</td></tr>
+      <tr><td><code>workspaces</code></td><td>{patterns[]}</td><td>Extra monorepo workspace globs beyond root <code>package.json</code>.</td></tr>
+      <tr><td><code>boundaries</code></td><td>{zones[],rules[]}</td><td>Architecture import rules (presets: bulletproof / layered / hexagonal / feature-sliced).</td></tr>
+      <tr><td><code>duplicates</code></td><td>object</td><td>Duplication settings — see <a href="#duplicates">below</a>.</td></tr>
+      <tr><td><code>health</code></td><td>object</td><td>Complexity thresholds + ignore — see <a href="#health">below</a>.</td></tr>
+      <tr><td><code>rules</code></td><td>map</td><td>Severity per rule — see <a href="#rules">below</a>.</td></tr>
+      <tr><td><code>production</code></td><td>bool | object</td><td>Production mode (per-analysis object form: <code>{health, deadCode, dupes}</code>).</td></tr>
+      <tr><td><code>includeEntryExports</code></td><td>bool</td><td>Also check exports in entry files (catches typos).</td></tr>
+      <tr><td><code>audit</code></td><td>object</td><td>Default <code>audit</code> gate + baseline paths.</td></tr>
+      <tr><td><code>codeowners</code> · <code>security</code> · <code>fix</code> · <code>resolve</code> · <code>cache</code> · <code>regression</code> · <code>sealed</code> · <code>autoImports</code> · <code>extends</code></td><td>various</td><td>CODEOWNERS path · security categories · fix policy · module resolution · cache · regression baseline · seal config · auto-import handling · config inheritance (<span class="muted">treat <code>extends</code> URLs as untrusted</span>).</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="rules">rules — severity map <a class="anchor" href="#rules">#</a></h2>
+  <p>Each rule is <code>"error"</code> (exit 1), <code>"warn"</code> (exit 0, visible), or <code>"off"</code>. Defaults:</p>
+  <table>
+    <thead><tr><th>Default <span class="chip err">error</span></th><th>Default <span class="chip warn">warn</span></th><th>Default <span class="chip">off</span></th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="small"><code>unused-files</code> · <code>unused-exports</code> · <code>unused-types</code> · <code>unused-dependencies</code> · <code>unused-enum-members</code> · <code>unused-class-members</code> · <code>unresolved-imports</code> · <code>unlisted-dependencies</code> · <code>duplicate-exports</code> · <code>circular-dependencies</code> · <code>boundary-violation</code> · <code>unresolved-catalog-references</code> · <code>misconfigured-dependency-overrides</code></td>
+        <td class="small"><code>unused-dev-dependencies</code> · <code>unused-optional-dependencies</code> · <code>type-only-dependencies</code> · <code>test-only-dependencies</code> · <code>re-export-cycle</code> · <code>stale-suppressions</code> · <code>unused-catalog-entries</code> · <code>empty-catalog-groups</code> · <code>unused-dependency-overrides</code></td>
+        <td class="small"><code>private-type-leaks</code> · <code>coverage-gaps</code> · <code>feature-flags</code> · <code>security-client-server-leak</code> · <code>security-sink</code></td>
+      </tr>
+    </tbody>
+  </table>
+  <pre><code>"rules": { "unused-exports": "warn", "circular-dependencies": "error", "stale-suppressions": "error" }</code></pre>
+
+  <h2 id="duplicates">duplicates <a class="anchor" href="#duplicates">#</a></h2>
+  <pre><code>"duplicates": {
+  "mode": "mild",            // strict | mild(default) | weak | semantic
+  "minTokens": 50, "minLines": 5, "minOccurrences": 2,
+  "threshold": 0,            // fail above this % (0 = no limit)
+  "ignore": ["tests/**"],    // merged with built-in generated-output ignores…
+  "ignoreDefaults": true,    // …set false to use ONLY your list
+  "skipLocal": false,        // only cross-directory clones
+  "ignoreImports": false     // drop import blocks from clone detection
+}</code></pre>
+
+  <h2 id="health">health <a class="anchor" href="#health">#</a></h2>
+  <pre><code>"health": {
+  "maxCyclomatic": 20, "maxCognitive": 15, "maxCrap": 30,
+  "ignore": ["tests/**"],          // exclude paths from complexity
+  "ownership": { "emailMode": "handle" },
+  "suggestInlineSuppression": true
+}</code></pre>
+
+  <h2 id="suppression">Inline suppression <a class="anchor" href="#suppression">#</a></h2>
+  <p>Comment forms. The <strong>token must match the analysis</strong> — this is the #1 mistake.</p>
+  <pre><code>// fallow-ignore-next-line &lt;token&gt;     // suppress the next line
+// fallow-ignore-file &lt;token&gt;          // suppress the whole file (top of file)
+&lt;!-- fallow-ignore-file complexity --&gt;   // HTML/templates (no line comments)</code></pre>
+
+  <h3 id="tokens">Token table <a class="anchor" href="#tokens">#</a></h3>
+  <table>
+    <thead><tr><th>Analysis</th><th>Token(s)</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>Dead code</td><td><code>unused-export</code>, <code>unused-file</code>, <code>unused-type</code>, <code>unused-dependency</code>, <code>type-only-dependency</code>, <code>test-only-dependency</code>, <code>circular-dependency</code>, <code>boundary-violation</code>, …</td><td><code>// fallow-ignore-next-line unused-export</code></td></tr>
+      <tr><td><b>Duplication</b></td><td><code>code-duplication</code> <span class="muted small">(NOT a dead-code token)</span></td><td><code>// fallow-ignore-next-line code-duplication</code></td></tr>
+      <tr><td><b>Complexity</b></td><td><code>complexity</code></td><td><code>// fallow-ignore-next-line complexity</code></td></tr>
+      <tr><td><b>Security</b></td><td><code>security-sink</code></td><td><code>// fallow-ignore-file security-sink</code></td></tr>
+    </tbody>
+  </table>
+  <div class="warn"><b>Stale suppressions are detected.</b> A <code>fallow-ignore</code> comment that no longer matches any
+  issue is reported (<code>stale-suppressions</code>, default <code>warn</code>) — so dead suppressions can't silently
+  hide regressions. Remove them when flagged.</div>
+
+  <h3 id="jsdoc">JSDoc visibility tags <a class="anchor" href="#jsdoc">#</a></h3>
+  <p>Block comments only (<code>/** */</code>) — line comments are ignored. Keep an export alive without an ignore:</p>
+  <table>
+    <thead><tr><th>Tag</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>/** @public */</code> / <code>/** @api public */</code></td><td>Public API consumed externally — never unused.</td></tr>
+      <tr><td><code>/** @internal */</code> · <code>/** @beta */</code> · <code>/** @alpha */</code></td><td>Kept-alive visibility annotations.</td></tr>
+      <tr><td><code>/** @expected-unused */</code></td><td>Intentionally unused — but fallow <em>warns if it becomes used</em> (stale). Prefer this over a plain ignore when you want that signal.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="order">Preference order (narrow → broad) <a class="anchor" href="#order">#</a></h3>
+  <ol>
+    <li>Inline <code>// fallow-ignore-next-line</code> (one line) / JSDoc tag</li>
+    <li><code>ignoreExports</code> (one export) / <code>ignoreDependencies</code> (one dep)</li>
+    <li><code>dynamicallyLoaded</code> / <code>publicPackages</code> / <code>ignoreDecorators</code> (a class of cases)</li>
+    <li><code>overrides</code> (a directory/pattern rule adjustment)</li>
+    <li><code>ignorePatterns</code> (whole files out of scope — generated only) — <em>last resort</em></li>
+  </ol>
+</main>
+<footer>Schema reflects <code>schema.json</code> at v2.87.0 (<code>node_modules/fallow/schema.json</code>). Authoritative: <a href="https://docs.fallow.tools/configuration/overview">docs.fallow.tools/configuration</a>.</footer>
+</body>
+</html>

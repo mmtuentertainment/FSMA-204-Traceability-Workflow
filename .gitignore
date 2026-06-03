@@ -8,3 +8,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 *.tsbuildinfo
+
+# fallow local cache / impact state (never committed)
+.fallow/
+
+# Claude Code: track shared config/hooks/skills, never personal or runtime files
+.claude/settings.local.json
+.claude/*.lock
