@@ -39,26 +39,26 @@ docker run -d --name fsma204-cov-pg \
   -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=fsma204_a1a2_test \
   -p 55432:5432 postgres:16-alpine
 export DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/fsma204_a1a2_test"
-export TEST_DATABASE_URL="$DATABASE_URL"
+export TEST_DATABASE_URL="$DATABASE_URL"        # db name contains "test" → passes both a1 & a2 fences
 npx drizzle-kit migrate --config drizzle.config.ts        # apply schema to a FRESH db
 
-# 2. capture V8 coverage from the provider suites
-rm -rf .coverage-tmp && mkdir -p .coverage-tmp/v8
-NODE_V8_COVERAGE=.coverage-tmp/v8 node --experimental-strip-types tests/db/exception-review-provider-a1.test.ts
-NODE_V8_COVERAGE=.coverage-tmp/v8 node --experimental-strip-types tests/db/exception-review-provider-a2.test.ts
+# 2. regenerate the snapshot: runs both suites under coverage, converts V8 -> Istanbul
+#    via c8, then normalizes (repo-relative POSIX paths, -1 -> 0, lib/** only, deterministic).
+npm run test:db:coverage                                  # writes coverage/provider/coverage-final.json
 
-# 3. V8 -> Istanbul, then normalize: paths -> repo-relative POSIX, and c8's `-1`
-#    sentinels -> 0 (fallow's parser rejects `-1`). Writes coverage/provider/coverage-final.json.
-npx --yes c8 report --temp-directory .coverage-tmp/v8 --reporter json --report-dir .coverage-tmp/istanbul
-node scripts/normalize-coverage.mjs   # (Batch 0058 lands this as a committed script + the `c8` devDep)
-
-# 4. confirm the gate clears with it
+# 3. confirm the gate clears with it
 FALLOW_COVERAGE=coverage/provider/coverage-final.json \
   npx fallow audit --base origin/main --format json --quiet 2>/dev/null   # verdict pass/warn
 
 docker rm -f fsma204-cov-pg
 ```
 
-Until Batch 0058 lands the committed normalizer + a Postgres CI job, the normalize step is the
-one-off transform documented in `ops/deltas/0057-*.md`: rewrite each entry's absolute path key and
-inner `.path` to `path.relative(root, …)` with forward slashes, and recursively replace `-1` → `0`.
+`npm run test:db:coverage` (Batch 0058) is the committed, reproducible path: `scripts/run-db-coverage.mjs`
+orchestrates the V8 capture and calls `scripts/normalize-coverage.mjs`, and `c8` is a devDependency. The
+same command runs in CI — the `db-provider-tests` job in `.github/workflows/contract-gate.yml` regenerates
+a fresh snapshot to a temp `--out` and a strict freshness guard fails the job when fallow's verdict from
+the committed snapshot diverges from the fresh one (or when fresh coverage does not clear the gate). The
+transform is deterministic: regenerating with byte-unchanged source reproduces the committed file exactly.
+The guard compares fallow's 3-way *verdict* (gate-equivalence), not raw bytes, so it tolerates
+count/offset/CRLF/OS noise — it enforces that the snapshot stays *gate-equivalent*, not necessarily
+byte-fresh — and it also fails the job if either audit crashes or yields no verdict.
