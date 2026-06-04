@@ -462,6 +462,24 @@ export async function completeIdempotencyRecord(
   }
 }
 
+export async function deleteIdempotencyRecord(
+  client: ProviderDbClient,
+  args: { idempotencyRecordId: number },
+): Promise<void> {
+  const result = await client.query(
+    `
+      DELETE FROM idempotency_records
+      WHERE id = $1
+        AND lifecycle_status = 'reserved'
+    `,
+    [args.idempotencyRecordId],
+  );
+
+  if (result.rowCount !== 1) {
+    throw new Error("Expected one reserved idempotency record to delete.");
+  }
+}
+
 export async function appendExceptionReviewAuditEvent(
   client: ProviderDbClient,
   args: {
@@ -567,6 +585,12 @@ export async function reviewTraceabilityExceptionWithProvider(
     computeExceptionReviewRequestHash({
       patch: request.patch,
       sourceDocumentRef: request.sourceDocumentRef ?? null,
+      // The actor is part of the request identity: idempotency scope is
+      // tenant/actor/action/key (design 03-02; matches lib/security/idempotency-audit.ts).
+      // Without the actor, a second authorized reviewer reusing the first's key +
+      // identical payload would silently replay the first result with no audit of
+      // the replaying actor — undercutting the append-only audit invariant.
+      actorAuthSubjectId: request.actorAuthSubjectId,
     });
   const reservation = await reserveIdempotencyRecord(client, {
     tenantId: request.tenantId,
@@ -632,6 +656,12 @@ export async function reviewTraceabilityExceptionWithProvider(
   });
 
   if (update.status === "not_found") {
+    // The reservation was taken before the tenant-scoped load. A missing (or
+    // wrong-tenant) exception must not leave a `reserved` row behind, or a later
+    // legitimate retry with the same key would read in_flight until the TTL.
+    await deleteIdempotencyRecord(client, {
+      idempotencyRecordId: reservation.idempotencyRecordId,
+    });
     return { status: "not_found" };
   }
 

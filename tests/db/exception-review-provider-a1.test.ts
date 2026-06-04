@@ -157,10 +157,14 @@ function request(
 function requestHash(
   patch: ProviderExceptionPatch = reviewPatch,
   ref: string | null = sourceDocumentRef,
+  actorAuthSubjectId: string = reviewer,
 ): string {
+  // Mirror the provider's request-hash inputs exactly (incl. the actor) so
+  // pre-seeded idempotency rows match the orchestrator's computed hash.
   return computeExceptionReviewRequestHash({
     patch,
     sourceDocumentRef: ref,
+    actorAuthSubjectId,
   });
 }
 
@@ -282,6 +286,26 @@ const tests: TestCase[] = [
       assert.equal(row.tenant_id, tenantB);
       assert.equal(row.status, "open");
       assert.equal(row.reviewed_by_auth_subject_id, null);
+    },
+  },
+  {
+    name: "orchestrator not_found leaves no reserved idempotency record",
+    async run() {
+      await resetTables();
+      await seedMembership();
+      // Intentionally do NOT seed the exception: an authorized reviewer targets a
+      // missing (or wrong-tenant) exception. The reservation is taken before the
+      // tenant-scoped load runs, so not_found must clean it up — otherwise a later
+      // legitimate retry with the same key reads in_flight until the TTL expires.
+
+      const outcome = await reviewTraceabilityExceptionInTransaction(
+        pool,
+        request(),
+      );
+
+      assert.equal(outcome.status, "not_found");
+      assert.equal(await countRows("idempotency_records"), 0);
+      assert.equal(await countRows("audit_events"), 0);
     },
   },
   {

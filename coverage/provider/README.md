@@ -12,8 +12,10 @@ false-positiving the well-tested provider functions. Introduced in Batch 0057
 The functions that otherwise trip coverage-blind CRAP at `maxCrap: 30`:
 
 - `lib/db/exception-review-provider.ts` — `reviewTraceabilityExceptionWithProvider`,
-  `reserveIdempotencyRecord`, `applyTenantScopedExceptionReview` (all 100% covered by the
-  Batch A1/A2 provider tests).
+  `reserveIdempotencyRecord`, `applyTenantScopedExceptionReview` (function-entry coverage by the
+  Batch A1/A2 provider tests — sufficient for the CRAP gate). Statement/branch coverage is **not**
+  100%: e.g. the `stableStringify` array branch is unexercised and several provider branches are
+  cold; the snapshot exists to make CRAP reflect real coverage, not to assert full-path coverage.
 - `lib/shared/canonical-json.ts` — the shared `stableStringify` request-hash helper.
 
 > Not covered here: `lib/api/exception-review.ts:readExceptionPatch` (a pre-existing function,

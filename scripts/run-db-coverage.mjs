@@ -54,6 +54,10 @@ function parseOut(argv) {
       out = next;
     } else if (token.startsWith("--out=")) {
       out = token.slice("--out=".length);
+    } else {
+      // Mirror normalize-coverage.mjs: fail loudly on a mistyped flag rather than
+      // silently ignoring it and overwriting the committed snapshot at the default path.
+      throw new Error(`run-db-coverage: unrecognized argument "${token}"`);
     }
   }
   if (!out) {

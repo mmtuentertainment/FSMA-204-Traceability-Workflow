@@ -17,6 +17,7 @@ const { Pool: PgPool } = pg;
 const tenantA = "provider-a2-tenant-a";
 const tenantB = "provider-a2-tenant-b";
 const reviewer = "provider-a2-reviewer";
+const reviewerB = "provider-a2-reviewer-b";
 const exceptionId = "provider-a2-exception";
 const secondExceptionId = "provider-a2-exception-two";
 const tenantBExceptionId = "provider-a2-tenant-b-exception";
@@ -411,6 +412,46 @@ const tests: TestCase[] = [
       assert.equal(metadata.status, "success");
       assert.equal(metadata.idempotency_key, "provider-a2-key-0001");
       assert.equal(metadata.source_document_ref, sourceDocumentRef);
+    },
+  },
+  {
+    name: "different_actor_same_key_same_payload_conflicts_and_audits_actor",
+    async run() {
+      await resetTables();
+      await seedMembership();
+      await seedMembership({ authSubjectId: reviewerB });
+      await seedException();
+
+      const first = await reviewTraceabilityExceptionInTransaction(
+        pool,
+        request(),
+      );
+      assertAccepted(first);
+
+      // Actor B reuses actor A's idempotency key with an identical payload. The
+      // actor is part of the request identity (design 03-02 scope is
+      // tenant/actor/action/key, matching lib/security/idempotency-audit.ts), so
+      // this must NOT silently replay A's result with no audit for B — it is a
+      // conflict, and B's attempt is recorded in the append-only audit trail.
+      const conflict = await reviewTraceabilityExceptionInTransaction(
+        pool,
+        request({ actorAuthSubjectId: reviewerB }),
+      );
+      assertConflict(conflict);
+
+      assert.deepEqual(conflict.problem, expectedConflictProblem());
+      assert.equal(conflict.idempotencyRecordId, first.idempotencyRecordId);
+      assert.equal(await countRows("idempotency_records"), 1);
+      assert.equal(await countRows("audit_events"), 2);
+
+      const audits = await readAuditRows();
+      const errorAudit = audits[1] as Record<string, unknown>;
+      assert.equal(errorAudit.actor_auth_subject_id, reviewerB);
+      assert.equal(errorAudit.reason, "idempotency_request_hash_mismatch");
+      assert.equal(
+        (errorAudit.metadata as Record<string, unknown>).status,
+        "conflict",
+      );
     },
   },
 ];
