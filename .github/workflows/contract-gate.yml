@@ -46,6 +46,11 @@ jobs:
         run: npm run test:exception-review:patch
 
       - name: Run fallow CI audit
+        env:
+          # Feed the committed provider coverage snapshot to the audit so CRAP scores
+          # reflect real test coverage (Batch 0057). Keeps health.maxCrap=30 honest;
+          # without it the well-tested provider functions trip coverage-blind CRAP.
+          FALLOW_COVERAGE: coverage/provider/coverage-final.json
         run: |
           if ! npx --no-install fallow --version >/dev/null 2>&1; then
             echo "::error::fallow is not installed (expected via npm ci)"

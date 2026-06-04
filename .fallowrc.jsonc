@@ -48,22 +48,20 @@
   // near-zero cognitive) — not meaningful refactor targets. Keep complexity
   // signal pointed at production code.
   "health": {
-    // CRAP = CC^2*(1-cov/100)^3 + CC. No runtime coverage is wired into the gate
-    // yet (the provider integration tests need Postgres and run only locally / in
-    // the planned `db-provider-tests` CI job), so fallow estimates coverage at ~0%
-    // and inflates CRAP to CC^2+CC — which FAILS code that is actually well-tested.
-    // The phase-3 provider functions are empirically 100% covered by
-    // tests/db/*-a1/a2 (verified: true CRAP < 15) and sit under the strict
-    // cyclomatic/cognitive ceilings below. So keep cyclomatic + cognitive STRICT
-    // (the meaningful, coverage-independent signals) and set maxCrap to 500, which
-    // is above maxCyclomatic^2 + maxCyclomatic (= 420, the largest coverage-blind
-    // CRAP a within-ceiling function can reach). Coverage-blind CRAP is therefore
-    // non-binding for code that passes the cyclomatic gate, while CRAP still trips
-    // on a genuine breach of the cyclomatic ceiling. Restore maxCrap to 30 once
-    // runtime coverage is wired into `fallow audit` (see ops/deltas/0056 follow-up).
+    // CRAP = CC^2*(1-cov/100)^3 + CC. Real runtime coverage IS wired into the gate
+    // (Batch 0057): the provider integration tests' coverage is captured as a
+    // committed Istanbul snapshot at coverage/provider/coverage-final.json and fed to
+    // `fallow audit` via the FALLOW_COVERAGE env (the CI verify step and the local
+    // commit hook both set it). With true coverage the phase-3 provider functions
+    // score CRAP < 15, so maxCrap is back to the strict default 30; cyclomatic and
+    // cognitive stay strict too. The snapshot fails CLOSED — editing a covered
+    // function changes its content hash, the stale coverage stops matching, the
+    // function reads as 0% and re-trips the gate, forcing a refresh. Regenerate per
+    // coverage/provider/README.md. A Postgres-backed CI job that regenerates and
+    // freshness-checks the snapshot lands in Batch 0058. See ops/deltas/0057-*.md.
     "maxCyclomatic": 20,
     "maxCognitive": 15,
-    "maxCrap": 500,
+    "maxCrap": 30,
     "ignore": ["tests/**"]
   },
 
