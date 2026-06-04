@@ -114,7 +114,7 @@ The FSMA 204 Workflow Product is a Next.js (App Router) + TypeScript service for
 4. **Data-seam layer** — `lib/api/mock-recall-source.ts` (read seam) and `lib/api/exception-review.ts` (write fixtures). Tenant ownership lives here.
 5. **Fixture data layer** — `lib/api/mock-recall.ts` (read fixture + CSV) and the in-memory stores in `lib/api/exception-review.ts`.
 6. **Error layer** — `lib/api/problem.ts` (cross-cuts the route + boundary layers).
-7. **Persistence provider layer (dormant)** — `lib/db/**` + `drizzle.config.ts` + `lib/db/migrations/**`. Not on any request path; exercised only by `tests/db/**`.
+7. **Persistence provider layer (dormant)** — `lib/db/**` + `drizzle.config.ts` + `lib/db/migrations/**`. Not on any request path; exercised only by the db test suites (`tests/db/**` plus `tests/db-client-import.test.ts`, the import-safety guard for `lib/db/client.ts`).
 8. **Shared utilities** — `lib/shared/canonical-json.ts`, shared by the api and db request hashers.
 
 ## Data Flow

@@ -47,7 +47,7 @@ The runtime is **deliberately fixture-only / scaffold-stage**. There are no live
 
 - **Not detected.** No logging, metrics, tracing, error-reporting (e.g. Sentry), or APM library is present in `package.json`, and no telemetry SDK is imported anywhere.
 - The closest construct is **append-only audit evidence**, which is product-domain data, not operational observability: the `audit_events` table (`lib/db/schema.ts:44-71`) and the in-memory `FixtureAuditSink` (`lib/security/idempotency-audit.ts:96-118`). Audit appends happen on the fixture PATCH route into the in-memory sink only.
-- Request correlation IDs are generated per request (`crypto.randomUUID()` in the context resolvers, `lib/security/request-context.ts:77,93,119`) but are not exported to any external system.
+- Request correlation IDs are generated per request (`crypto.randomUUID()` in the context resolvers, `lib/security/request-context.ts:76,92,119`) but are not exported to any external system.
 
 ## CI/CD & Deployment
 
@@ -73,7 +73,7 @@ No `.env*` contents were read; only existence/usage is noted. Environment variab
 | `FALLOW_AGENT_SOURCE` | `.mcp.json:7` | Identifies the MCP client (`claude_code`) to fallow. | Dev tooling |
 
 - **Gitignored env files** — `.gitignore:5` ignores `.env*.local`. No `.env` files were read.
-- The baseline `typecheck`/`build` and the live fixture routes require **no** environment variables (`README.md:40`).
+- The baseline `typecheck`/`build` require **no** live `DATABASE_URL` (`README.md:40`); the live fixture routes likewise read no environment variables (they serve in-memory fixtures).
 
 ## Webhooks & Callbacks
 

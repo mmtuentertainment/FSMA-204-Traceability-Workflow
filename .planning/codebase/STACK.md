@@ -66,7 +66,7 @@ Note: `drizzle-orm` and `pg` are declared as runtime deps but currently only rea
 
 ## Configuration
 
-- **`tsconfig.json`** — strict TS, `noEmit`, bundler module resolution, Next plugin, `.ts`-extension imports. Excludes `node_modules`; includes `next-env.d.ts`, `.next/types/**`, `**/*.ts(x)`.
+- **`tsconfig.json`** — strict TS, `noEmit`, bundler module resolution, Next plugin, `.ts`-extension imports. Excludes `node_modules`; includes `next-env.d.ts`, `.next/types/**`, `.next/dev/types/**`, `**/*.ts(x)`.
 - **`next-env.d.ts`** — generated Next.js ambient types (marked "should not be edited"); gitignored (`.gitignore:4`).
 - **No `next.config.*`** — Next.js runs on defaults.
 - **`drizzle.config.ts`** — Drizzle Kit config: `schema: ./lib/db/schema.ts`, `out: ./lib/db/migrations`, `dialect: postgresql`, `strict: true`, `verbose: true`. Reads `process.env.DATABASE_URL`, falling back to a credential-free local URL `postgresql://localhost:5432/fsma204_schema_check` so schema checks run without a live DB (`drizzle.config.ts:3-16`).

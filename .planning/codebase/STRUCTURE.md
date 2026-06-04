@@ -70,6 +70,7 @@ FSMA 204 Workflow Product/
 ├── tsconfig.json                         # strict TS, bundler resolution, allowImportingTsExtensions
 ├── package.json / package-lock.json
 ├── AGENTS.md / CLAUDE.md / README.md     # repo + agent instructions
+├── PLAN.md / FORENSIC-REALIGNMENT-REPORT-2026-05-29.md   # active plan + forensic realignment record
 └── .coderabbit.yaml / .gitattributes / .gitignore
 ```
 
