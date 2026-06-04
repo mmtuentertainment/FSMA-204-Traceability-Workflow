@@ -11,9 +11,13 @@
     "api:types": "openapi-typescript api/openapi.yaml -o lib/api/generated/openapi-types.ts",
     "api:types:check": "openapi-typescript api/openapi.yaml -o lib/api/generated/openapi-types.ts --check",
     "api:check": "npm run api:lint && npm run api:types:check",
-    "db:check": "drizzle-kit check --config drizzle.config.ts",
+    "db:migrations:check": "drizzle-kit check --config drizzle.config.ts",
+    "db:check": "npm run db:migrations:check && npm run test:db-client:import",
+    "test:db-client:import": "node --experimental-strip-types tests/db-client-import.test.ts",
     "test:mock-recall:contract": "node tests/mock-recall-contract-smoke.mjs",
     "test:exception-review:patch": "node --experimental-strip-types tests/exception-review-patch.test.ts",
+    "test:db": "node --experimental-strip-types tests/db/exception-review-provider-a1.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a2.test.ts",
+    "test:db:coverage": "node scripts/run-db-coverage.mjs",
     "fallow:ci": "fallow audit --fail-on-issues"
   },
   "engines": {
@@ -22,14 +26,17 @@
   "dependencies": {
     "drizzle-orm": "^0.45.2",
     "next": "^16.2.6",
+    "pg": "^8.21.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@redocly/cli": "^2.31.5",
     "@types/node": "^20.19.41",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
+    "c8": "^11.0.0",
     "drizzle-kit": "^0.31.10",
     "fallow": "^2.87.0",
     "openapi-typescript": "^7.13.0",

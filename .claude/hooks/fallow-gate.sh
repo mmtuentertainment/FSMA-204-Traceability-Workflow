@@ -70,7 +70,18 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if "${RUNNER[@]}" audit --format json --quiet --explain >"$TMP_JSON" 2>"$TMP_ERR"; then
+# Batch 0057: feed the committed provider coverage snapshot to the audit so CRAP
+# scores reflect real test coverage (mirrors the CI verify step's FALLOW_COVERAGE).
+# An explicit FALLOW_COVERAGE wins; otherwise default to the committed snapshot when
+# present. If neither exists the audit runs coverage-blind (prior behavior) — that
+# fails CLOSED (well-tested code can over-report CRAP and block), never open.
+COVERAGE_FILE="${FALLOW_COVERAGE:-coverage/provider/coverage-final.json}"
+COV_ARGS=()
+if [ -f "$COVERAGE_FILE" ]; then
+  COV_ARGS=(--coverage "$COVERAGE_FILE")
+fi
+
+if "${RUNNER[@]}" audit --format json --quiet --explain ${COV_ARGS[@]+"${COV_ARGS[@]}"} >"$TMP_JSON" 2>"$TMP_ERR"; then
   STATUS=0
 else
   STATUS=$?

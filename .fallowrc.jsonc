@@ -12,10 +12,14 @@
   // consume as an "unused export". Declaring the test globs as entry points
   // makes fallow's graph match reality. This is ADDITIVE to the framework
   // plugins' auto-detected entries (Next.js routes, drizzle schema, etc.).
+  // scripts/*.mjs are executed entry points (run via npm scripts / spawned for the
+  // Batch 0058 coverage-regen tooling), not imported modules — declare them as roots
+  // so fallow does not report them as unused files.
   "entry": [
     "tests/**/*.test.ts",
     "tests/**/*.test.mts",
-    "tests/**/*.mjs"
+    "tests/**/*.mjs",
+    "scripts/**/*.mjs"
   ],
 
   // --- Globally ignored: generated / vendored / non-code ----------------
@@ -45,10 +49,27 @@
 
   // --- Complexity / health ----------------------------------------------
   // Test "run()" bodies are long sequential assertion lists (high cyclomatic,
-  // near-zero cognitive) — not meaningful refactor targets. Keep complexity
-  // signal pointed at production code.
+  // near-zero cognitive) — not meaningful refactor targets; and scripts/** is
+  // dev/coverage tooling that is not coverage-instrumented, so CRAP (which assumes
+  // 0% coverage for it) would be meaningless. Both are excluded from health; keep
+  // the complexity signal pointed at shipped production code.
   "health": {
-    "ignore": ["tests/**"]
+    // CRAP = CC^2*(1-cov/100)^3 + CC. Real runtime coverage IS wired into the gate
+    // (Batch 0057): the provider integration tests' coverage is captured as a
+    // committed Istanbul snapshot at coverage/provider/coverage-final.json and fed to
+    // `fallow audit` via the FALLOW_COVERAGE env (the CI verify step and the local
+    // commit hook both set it). With true coverage the phase-3 provider functions
+    // score CRAP < 15, so maxCrap is back to the strict default 30; cyclomatic and
+    // cognitive stay strict too. The snapshot fails CLOSED — editing a covered
+    // function changes its content hash, the stale coverage stops matching, the
+    // function reads as 0% and re-trips the gate, forcing a refresh. Regenerate with
+    // `npm run test:db:coverage` (see coverage/provider/README.md). The Postgres-backed
+    // db-provider-tests CI job regenerates and freshness-checks the snapshot every PR
+    // (Batch 0058). See ops/deltas/0057-*.md and 0058-*.md.
+    "maxCyclomatic": 20,
+    "maxCognitive": 15,
+    "maxCrap": 30,
+    "ignore": ["tests/**", "scripts/**"]
   },
 
   // --- Rule severity policy ---------------------------------------------

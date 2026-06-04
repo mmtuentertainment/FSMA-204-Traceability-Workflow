@@ -30,6 +30,9 @@ jobs:
       - name: Check OpenAPI contract
         run: npm run api:check
 
+      - name: Check database schema migrations
+        run: npm run db:check
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -43,6 +46,11 @@ jobs:
         run: npm run test:exception-review:patch
 
       - name: Run fallow CI audit
+        env:
+          # Feed the committed provider coverage snapshot to the audit so CRAP scores
+          # reflect real test coverage (Batch 0057). Keeps health.maxCrap=30 honest;
+          # without it the well-tested provider functions trip coverage-blind CRAP.
+          FALLOW_COVERAGE: coverage/provider/coverage-final.json
         run: |
           if ! npx --no-install fallow --version >/dev/null 2>&1; then
             echo "::error::fallow is not installed (expected via npm ci)"
@@ -53,3 +61,95 @@ jobs:
           # the step, so warn-level findings pass while error-severity findings and runtime
           # errors block the PR. Mirrors the local hook, which blocks on verdict=fail.
           npm run fallow:ci -- --base origin/main
+
+  db-provider-tests:
+    name: Provider DB tests + coverage freshness
+    runs-on: ubuntu-latest
+
+    # Disposable Postgres for the provider-backed Batch A1/A2 suites. GitHub Actions
+    # waits for the health check before any step runs, so no manual wait is needed.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fsma204_a1a2_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Reach the service over 127.0.0.1, never localhost: IPv6 ::1 makes pg.Pool
+      # ECONNRESET against a published Docker port. The db name contains "test", which
+      # satisfies both suites' TEST_DATABASE_URL safety fences.
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/fsma204_a1a2_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/fsma204_a1a2_test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0            # full history so fallow audit --base origin/main resolves
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations to the test database
+        run: npx drizzle-kit migrate --config drizzle.config.ts
+
+      - name: Run provider DB suites under coverage (regenerate a fresh snapshot)
+        # Running the suites under coverage IS the execution path: a failing provider
+        # test fails the job (this closes the gap that tests/db/* never ran in CI).
+        # Fresh coverage goes to a temp --out so the committed snapshot is never mutated.
+        run: npm run test:db:coverage -- --out .coverage-tmp/fresh.json
+
+      - name: Coverage freshness guard (semantic, strict)
+        # Compare fallow's 3-way verdict computed from the COMMITTED snapshot vs from the
+        # FRESH coverage. Fail on: drift (committed != fresh), fresh not clearing the gate
+        # (fresh == fail), OR either audit crashing (exit >= 2 / no real verdict). Comparing
+        # fallow's interpretation makes the guard immune to count/offset/CRLF/OS byte-noise.
+        # jq is preinstalled on the runner.
+        run: |
+          mkdir -p .coverage-tmp            # self-contained; do not rely on a prior step's mkdir
+          set +e
+          FALLOW_COVERAGE=coverage/provider/coverage-final.json \
+            npx --no-install fallow audit --base origin/main --format json --quiet \
+            > .coverage-tmp/committed-audit.json 2> .coverage-tmp/committed-audit.err
+          rc_committed=$?
+          FALLOW_COVERAGE=.coverage-tmp/fresh.json \
+            npx --no-install fallow audit --base origin/main --format json --quiet \
+            > .coverage-tmp/fresh-audit.json 2> .coverage-tmp/fresh-audit.err
+          rc_fresh=$?
+          set -e
+          # fallow exits >= 2 on a runtime error and writes an error object with no .verdict
+          # (which jq would render as "null"). Without this check a SYMMETRIC crash — both
+          # audits failing identically — reads as committed==fresh!=fail and FALSELY passes.
+          if [ "$rc_committed" -ge 2 ] || [ "$rc_fresh" -ge 2 ]; then
+            echo "::error::fallow audit crashed (committed rc=$rc_committed, fresh rc=$rc_fresh)."
+            cat .coverage-tmp/committed-audit.err .coverage-tmp/fresh-audit.err 2>/dev/null || true
+            exit 1
+          fi
+          C=$(jq -r '.verdict // "missing"' .coverage-tmp/committed-audit.json)
+          F=$(jq -r '.verdict // "missing"' .coverage-tmp/fresh-audit.json)
+          echo "committed verdict=$C ; fresh verdict=$F"
+          case "$C" in pass|warn|fail) ;; *) echo "::error::committed audit produced no usable verdict (got '$C')."; exit 1 ;; esac
+          case "$F" in pass|warn|fail) ;; *) echo "::error::fresh audit produced no usable verdict (got '$F')."; exit 1 ;; esac
+          if [ "$C" != "$F" ]; then
+            echo "::error::Coverage freshness drift (committed=$C fresh=$F). Regenerate: npm run test:db:coverage"
+            exit 1
+          fi
+          if [ "$F" = "fail" ]; then
+            echo "::error::Fresh provider coverage does not clear the fallow gate (verdict=fail)."
+            exit 1
+          fi

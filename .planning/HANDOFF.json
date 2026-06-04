@@ -1,10 +1,10 @@
 {
-  "version": "1.8",
-  "timestamp": "2026-06-02T10:28:47-04:00",
+  "version": "2.4",
+  "timestamp": "2026-06-02T17:43:12-04:00",
   "phase": 3,
   "phase_name": "Security And Persistence Foundation",
   "phase_dir": ".planning/phases/FSMA-03-security-and-persistence-foundation",
-  "status": "phase_3_postgres_drizzle_foundation_added",
+  "status": "phase_3_provider_backed_repository_service_test_approval_packet_added",
   "repo": {
     "path": "C:\\Users\\matth\\Desktop\\FSMA 204 Workflow Product",
     "branch": "main",
@@ -39,7 +39,17 @@
     "phase_3_provider_decision_gap_audit": ".planning/phase-3-provider-decision-gap-audit.md",
     "phase_3_provider_activation_decisions": ".planning/phase-3-provider-activation-decisions.md",
     "phase_3_exception_review_patch_activation_scope": ".planning/phase-3-exception-review-patch-activation-scope.md",
-    "batch_43_postgres_drizzle_foundation": "ops/deltas/0043-postgres-drizzle-foundation.md"
+    "batch_43_postgres_drizzle_foundation": "ops/deltas/0043-postgres-drizzle-foundation.md",
+    "batch_44_db_check_ci_gate": "ops/deltas/0044-db-check-ci-gate.md",
+    "phase_3_exception_review_patch_activation": ".planning/phase-3-exception-review-patch-activation.md",
+    "batch_45_exception_review_patch_activation_approval": "ops/deltas/0045-exception-review-patch-activation-approval.md",
+    "batch_46_postgres_runtime_client_seam": "ops/deltas/0046-postgres-runtime-client-seam.md",
+    "batch_47_db_client_import_safety_gate": "ops/deltas/0047-db-client-import-safety-gate.md",
+    "phase_3_provider_activation_minimum_decisions": ".planning/phase-3-provider-activation-minimum-decisions.md",
+    "batch_48_provider_activation_minimum_decision_packet": "ops/deltas/0048-provider-activation-minimum-decision-packet.md",
+    "batch_49_provider_activation_decision_tightenings": "ops/deltas/0049-provider-activation-decision-tightenings.md",
+    "phase_3_provider_backed_repository_service_test_approval": ".planning/phase-3-provider-backed-repository-service-test-approval.md",
+    "batch_50_provider_backed_repository_service_test_approval": "ops/deltas/0050-provider-backed-repository-service-test-approval.md"
   },
   "current_state": {
     "summary": [
@@ -59,11 +69,18 @@
       "Batch 40 audited the remaining provider decision gaps after PR #10 without changing runtime behavior.",
       "Batch 41 records default provider activation decisions for the future exception-review PATCH path: Auth.js database-backed sessions, application-owned PostgreSQL tenant_memberships, tenant_admin/quality_reviewer/read_only roles, PostgreSQL plus Drizzle, durable idempotency replay snapshots, append-only audit_events, a PostgreSQL fixed-window limiter, and provider-backed tests before route success activation.",
       "Batch 42 explicitly lifts the Phase 4-8 non-goal only for future production-like exception-review PATCH implementation, while excluding lot/event workflow, supplier KDE workflow, mock recall readiness computation, production CSV, imports, dashboards, supplier portal, and broader workflow work.",
-      "Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation for tenant_memberships, traceability_exceptions, idempotency_records, and append-only audit_events without wiring a runtime database provider or changing route behavior."
+      "Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation for tenant_memberships, traceability_exceptions, idempotency_records, and append-only audit_events without wiring a runtime database provider or changing route behavior.",
+      "Batch 44 adds npm run db:check to the CI contract gate so Drizzle schema/migration metadata is protected without runtime, schema, migration, or package changes.",
+      "Batch 45 records the docs-only approval packet for the future exception-review PATCH provider implementation, including the one-write Phase 4-8 non-goal lift, guardrails, implementation mode, acceptance criteria, and non-activation statement.",
+      "Batch 46 adds the lazy PostgreSQL runtime client seam for future Drizzle repositories and an import-only check proving it does not require DATABASE_URL until requested, without route wiring or PATCH activation.",
+      "Batch 47 makes the DB client import-safety check reachable through npm run db:check, which is already part of the CI contract gate, without changing runtime behavior or requiring DATABASE_URL.",
+      "Batch 48 adds a docs-only provider-activation minimum-decision approval packet that consolidates the nine required pre-code decisions for the future exception-review PATCH (auth source, server-derived tenant identity, RBAC decision point, Postgres persistence boundary, idempotency storage, append-only audit evidence, Problem Details, 429 Retry-After, and rollback path) without changing runtime, API, generated type, schema, migration, persistence, dependency, or CI behavior.",
+      "Batch 49 tightens the Batch 48 decisions into explicit pre-code gates T1-T9 (atomic transaction contract, idempotency concurrency protocol, idempotency resource-scope drift, redaction/minimization, auth/CSRF, DB connection hardening, rate/input/migration/observability, first-slice persistence reconciliation, and verification-scope/scaffold non-enforcement) without changing runtime, contract, dependency, package, or CI artifacts.",
+      "Batch 50 adds a docs-only approval packet that resolves the T3 idempotency resource-scope decision (add resource_type/resource_id columns to idempotency_records and rescope uniqueness via one forward-only migration) and scopes the next code batch (Batch A): provider-backed repository/service tests for tenant membership lookup, tenant-scoped exception update, idempotency reserve/replay/conflict, append-only audit append, and rate-limit posture against a real Postgres test DB, with no route wiring; runtime hardening (Batch B) waits until that test slice is accepted."
     ],
     "openapi_source_of_truth": "api/openapi.yaml",
     "generated_contract_types": "lib/api/generated/openapi-types.ts",
-    "ci_contract_gate": ".github/workflows/contract-gate.yml runs npm ci, npm run api:check, npm run typecheck, npm run build, npm run test:mock-recall:contract, and npm run test:exception-review:patch on push and pull request events.",
+    "ci_contract_gate": ".github/workflows/contract-gate.yml runs npm ci, npm run api:check, npm run db:check, npm run typecheck, npm run build, npm run test:mock-recall:contract, and npm run test:exception-review:patch on push and pull request events. npm run db:check covers Drizzle migration metadata plus the DB client import-safety check.",
     "mock_recall_contract_smoke": "tests/mock-recall-contract-smoke.mjs verifies the current contract fixture and missing-resource Problem Details behavior against a production Next server.",
     "exception_review_patch_focused_test": "tests/exception-review-patch.test.ts verifies the fixture-only exception-review PATCH path directly through npm run test:exception-review:patch. The script uses Node built-in type stripping and may print the current experimental type-stripping and module-type warnings.",
     "mock_recall_examples_review": "Batch 21 found the MockRecall detail, packet CSV, and 404 Problem Details examples aligned with runtime fixture intent; api/openapi.yaml was unchanged.",
@@ -75,12 +92,12 @@
     "phase_2_verification_scope_doc": ".planning/phases/FSMA-02-problem-details-test-harness/VERIFICATION-SCOPE.md",
     "phase_3_goal": "Establish the approved security and persistence foundation for server-derived tenant context, auth/RBAC boundaries, idempotency, persistence shape, and append-only audit evidence before production-like traceability data workflows.",
     "phase_3_kickoff_plan": ".planning/phases/FSMA-03-security-and-persistence-foundation/KICKOFF.md",
-    "phase_3_status": "Boundary skeleton implemented in Batch 29 (Variant A), and the first approved mutating write is implemented in Batch 34 for PATCH /api/traceability/exceptions/{exceptionId} only. The write uses local/test fixture auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, in-memory fixture repository state, idempotency replay/conflict handling, and append-only in-memory audit evidence. Batch 41 records default future provider decisions, Batch 42 lifts the Phase 4-8 non-goal only for future exception-review PATCH implementation, and Batch 43 adds a PostgreSQL plus Drizzle schema/migration foundation. Phase 3 is not complete; production auth, runtime database persistence, production RBAC, durable idempotency enforcement, persisted audit enforcement, rate limiting, and broader workflows remain absent.",
+    "phase_3_status": "Boundary skeleton implemented in Batch 29 (Variant A), and the first approved mutating write is implemented in Batch 34 for PATCH /api/traceability/exceptions/{exceptionId} only. The write uses local/test fixture auth, server-derived fixture tenant identity, same-tenant reviewer RBAC, in-memory fixture repository state, idempotency replay/conflict handling, and append-only in-memory audit evidence. Batch 41 records default future provider decisions, Batch 42 lifts the Phase 4-8 non-goal only for future exception-review PATCH implementation, Batch 43 adds a PostgreSQL plus Drizzle schema/migration foundation, Batch 44 protects db:check in CI, Batch 45 records the future activation approval packet, Batch 46 adds a lazy PostgreSQL runtime client seam, and Batch 47 wires the import-safety check into db:check. Phase 3 is not complete; production auth, route-wired database persistence, production RBAC, durable idempotency enforcement, persisted audit enforcement, rate limiting, and broader workflows remain absent.",
     "phase_3_boundary_skeleton": "lib/security/request-context.ts, lib/security/authorization.ts, lib/api/mock-recall-source.ts, lib/api/route-boundary.ts, and lib/security/idempotency-audit.ts; problem.ts gained 401/403 catalog entries; both app route handlers call handleReadAction. Documented in ops/deltas/0029-boundary-skeleton.md.",
     "phase_3_03_01a_boundary_decision": "Server-derived tenant identity, request-boundary auth, deny-by-default action RBAC, tenant-scoped persistence, and paired idempotency/audit boundaries are the high-level model for future approved implementation."
   },
   "remaining_absences": [
-    "No live database connection or runtime database provider.",
+    "No route-wired database connection, repository business logic, or runtime persistence; a lazy PostgreSQL client seam exists but is not requested by routes.",
     "No production authentication provider; exception-review PATCH uses local/test fixture bearer auth only.",
     "No runtime tenant provider; the Drizzle tenant_memberships schema exists but tenants are still server-derived fixture values only.",
     "No production RBAC provider; exception-review PATCH enforces the same-tenant fixture reviewer role only.",
@@ -93,7 +110,7 @@
   ],
   "next_recommended_actions": [
     {
-      "action": "The first approved mutating write is implemented as a fixture-only PATCH /api/traceability/exceptions/{exceptionId}. Batch 41 records default future provider decisions, Batch 42 limits the Phase 4-8 non-goal lift to that future write only, and Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation. The next smallest implementation candidate is provider-backed service/repository tests after Matt approves exact code scope.",
+      "action": "The first approved mutating write is implemented as a fixture-only PATCH /api/traceability/exceptions/{exceptionId}. Batches 48-50 record the provider-activation decisions, the T1-T9 tightenings, and (Batch 50) the resolution of the T3 idempotency resource-scope decision plus the scope for the next code batch. The next smallest implementation candidate is Batch A: the single forward-only T3 migration (resource_type/resource_id on idempotency_records + rescoped uniqueness) plus provider-backed repository/service tests for tenant membership lookup, tenant-scoped exception update, idempotency reserve/replay/conflict, append-only audit append, and rate-limit posture against a real Postgres test DB, with NO route wiring, after Matt approves the exact Batch A code scope. Batch B (route wiring, live DATABASE_URL, T6 connection hardening, persistent rate limiting, PATCH activation) must not start until Batch A's test slice is green and accepted.",
       "status": "ready_for_next_approval"
     },
     {

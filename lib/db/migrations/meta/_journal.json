@@ -8,6 +8,13 @@
       "when": 1780410486459,
       "tag": "0000_postgres_exception_review_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780481501415,
+      "tag": "0001_idempotency_resource_scope",
+      "breakpoints": true
     }
   ]
 }

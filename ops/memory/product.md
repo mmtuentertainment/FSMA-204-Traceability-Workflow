@@ -3,7 +3,7 @@
 - FSMA 204 readiness workflow, not compliance certification.
 - First wedge remains fresh-cut produce mock recall readiness.
 - OpenAPI-first contract and generated TypeScript contract tooling exist.
-- The GitHub Actions CI contract gate exists and runs install, `api:check`, typecheck, build, MockRecall contract smoke, and exception-review PATCH focused fixture checks.
+- The GitHub Actions CI contract gate exists and runs install, `api:check`, `db:check`, typecheck, build, MockRecall contract smoke, and exception-review PATCH focused fixture checks.
 - Mock-recall routes expose one OpenAPI-declared contract fixture for runtime smoke checks.
 - MockRecall OpenAPI examples were reviewed against the fixture and missing-resource Problem Details behavior; no OpenAPI repair was needed.
 - The committed MockRecall contract smoke check verifies the fixture and missing-resource Problem Details behavior against a production Next server.
@@ -18,6 +18,13 @@
 - Batch 41 records default future provider decisions without implementation: Auth.js database-backed sessions, PostgreSQL tenant_memberships, tenant_admin/quality_reviewer/read_only roles, PostgreSQL plus Drizzle, idempotency replay snapshots, append-only audit_events, a fixed-window limiter, and provider-backed tests before route success activation.
 - Batch 42 explicitly lifts the Phase 4-8 non-goal only for future exception-review PATCH implementation; lot/event workflow, supplier KDE workflow, mock recall computation, production CSV, imports, dashboards, supplier portal, and broader workflow work remain excluded.
 - Batch 43 adds the PostgreSQL plus Drizzle schema/migration foundation for tenant memberships, traceability exceptions, idempotency records, and append-only audit events without runtime route wiring or a live database provider.
+- Batch 44 adds `db:check` to the CI contract gate without runtime, schema, migration, package, or API changes.
+- Batch 45 records a docs-only approval packet for future exception-review PATCH provider activation; current runtime remains fixture-only.
+- Batch 46 adds a lazy PostgreSQL runtime client seam for future Drizzle repositories; no route wiring or PATCH activation exists.
+- Batch 47 adds the DB client import-safety test to `npm run db:check`; CI already runs that aggregate, so no workflow change was needed.
 - Batch 37 wires the existing fixture-only exception-review PATCH focused test into package scripts and the CI contract gate without changing runtime behavior.
+- Batch 48 adds a docs-only provider-activation minimum-decision approval packet that consolidates the nine required pre-code decisions (auth source, server-derived tenant identity, RBAC decision point, Postgres persistence boundary, idempotency storage, append-only audit evidence, Problem Details, 429 `Retry-After`, and rollback path) for the future exception-review PATCH; runtime remains fixture-only and no route is activated.
+- Batch 49 tightens those minimum decisions into explicit pre-code gates T1-T9 (atomic transaction contract, idempotency concurrency protocol, idempotency resource-scope drift, redaction/minimization, auth/CSRF, DB connection hardening, rate/input/migration/observability, first-slice persistence reconciliation, and verification-scope/scaffold non-enforcement); docs/planning only, no runtime change.
+- Batch 50 adds a docs-only approval packet that resolves the T3 idempotency resource-scope decision (add `resource_type`/`resource_id` columns to `idempotency_records` and rescope uniqueness; one forward-only migration) and scopes the next code batch (Batch A): provider-backed repository/service tests for tenant membership lookup, tenant-scoped exception update, idempotency reserve/replay/conflict, append-only audit append, and rate-limit posture, run against a real Postgres test DB with no live route wiring. Runtime hardening (Batch B) waits until that test slice is green and accepted; runtime stays fixture-only.
 - `PLAN.md` is tracked in the current HEAD; do not edit it unless explicitly approved.
-- Next useful code batch should be small, reversible, explicitly approved, and limited to provider-backed service/repository tests before production-like route activation.
+- Next useful code batch should be small, reversible, explicitly approved, and limited to provider-backed repository/service tests before production-like route activation.
