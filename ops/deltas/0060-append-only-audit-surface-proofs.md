@@ -24,8 +24,9 @@ dependency. Batch B (route wiring) remains gated until Batch A is fully accepted
   a3, so a3 actually runs in CI and contributes to the committed coverage snapshot.
 - `coverage/provider/coverage-final.json` - regenerated with a1+a2+a3. The covered file
   set is unchanged (`lib/db/exception-review-provider.ts`, `lib/shared/canonical-json.ts`);
-  only hit counts shifted because a3's behavioral case re-exercises the already-covered
-  accepted path. fallow verdict stays `pass`; the transform is byte-deterministic.
+  hit counts and branch instrumentation shifted (a3 exercises additional idempotency
+  reserve/reclaim code paths the a1+a2 set did not — the provider `branchMap` grows 80→81;
+  no provider source change). fallow verdict stays `pass`; the transform is byte-deterministic.
 - `ops/deltas/0060-append-only-audit-surface-proofs.md` - this report.
 
 ## Contract And Runtime Impact

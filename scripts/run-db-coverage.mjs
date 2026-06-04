@@ -7,7 +7,7 @@
 //
 // Steps (all in-process):
 //   1. Clean + recreate the V8 coverage scratch dir under .coverage-tmp/.
-//   2. Run the provider suites SEQUENTIALLY (a1 then a2) under NODE_V8_COVERAGE.
+//   2. Run the provider suites SEQUENTIALLY (a1, a2, then a3) under NODE_V8_COVERAGE.
 //      They share tables and TRUNCATE between cases, so running them in parallel
 //      would race; sequential spawnSync preserves order. A failing suite
 //      propagates its non-zero exit (this is what makes the CI job actually
