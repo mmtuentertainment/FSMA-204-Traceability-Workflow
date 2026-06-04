@@ -40,6 +40,7 @@ const ISTANBUL_FILE = path.join(ISTANBUL_DIR, "coverage-final.json");
 const SUITES = [
   path.join("tests", "db", "exception-review-provider-a1.test.ts"),
   path.join("tests", "db", "exception-review-provider-a2.test.ts"),
+  path.join("tests", "db", "exception-review-provider-a3.test.ts"),
 ];
 
 function parseOut(argv) {
