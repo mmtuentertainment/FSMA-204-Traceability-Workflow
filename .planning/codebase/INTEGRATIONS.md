@@ -1,6 +1,6 @@
 # External Integrations
 
-> Reference document for `.planning/codebase/`. Describes the current state at git HEAD (`51141c9`, "Batch 58"), generated 2026-06-04. Every claim is grounded in repository files; see inline `path:line` references.
+> Reference document for `.planning/codebase/`. Reflects the "Batch 58" working state (source lands on `main` via the phase-3 PR #12), generated 2026-06-04. Every claim is grounded in repository files; see inline `path:line` references.
 
 The runtime is **deliberately fixture-only / scaffold-stage**. There are no live third-party API clients, no outbound network calls, and no production data store wired into any request path. The integrations below are split carefully into **active** (reachable from a live route / CI) and **scaffold** (configured but not route-wired).
 

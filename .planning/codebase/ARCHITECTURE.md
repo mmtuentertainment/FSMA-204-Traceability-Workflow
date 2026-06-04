@@ -1,6 +1,6 @@
 # Architecture
 
-> Last updated: 2026-06-04. Describes the state at git HEAD (`51141c9`, "Batch 58").
+> Last updated: 2026-06-04. Reflects the "Batch 58" working state; the source it describes lands on `main` via the phase-3 PR (#12).
 
 The FSMA 204 Workflow Product is a Next.js (App Router) + TypeScript service for food-traceability recall readiness. OpenAPI is the source of truth at `api/openapi.yaml`; the runtime is deliberately fixture-only / scaffold-stage. Three API route handlers are wired today, all under `app/api/traceability/**`. The recently-added provider-neutral security/persistence boundary (`lib/security/**`, `lib/api/**`) and the Drizzle + Postgres provider adapters (`lib/db/**`) exist behind seams; production auth, storage, imports, exports, and CSV generation are explicitly out of scope.
 

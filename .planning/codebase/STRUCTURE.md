@@ -1,6 +1,6 @@
 # Directory Structure
 
-> Last updated: 2026-06-04. Reflects git HEAD (`51141c9`, "Batch 58").
+> Last updated: 2026-06-04. Reflects the "Batch 58" working state; the source it describes lands on `main` via the phase-3 PR (#12).
 
 A Next.js (App Router) + TypeScript scaffold. Source lives in `app/` (routes + shell) and `lib/` (boundary, API fixtures, DB provider, shared utils); the API contract is in `api/`; planning, ops evidence, and the fallow wiki are kept in dedicated directories.
 

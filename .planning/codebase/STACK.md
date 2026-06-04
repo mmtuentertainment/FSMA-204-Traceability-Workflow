@@ -1,6 +1,6 @@
 # Technology Stack
 
-> Reference document for `.planning/codebase/`. Describes the current state at git HEAD (`51141c9`, "Batch 58"), generated 2026-06-04. Every claim is grounded in repository files; see inline `path:line` references.
+> Reference document for `.planning/codebase/`. Reflects the "Batch 58" working state (source lands on `main` via the phase-3 PR #12), generated 2026-06-04. Every claim is grounded in repository files; see inline `path:line` references.
 
 The FSMA 204 Workflow Product is a Next.js (App Router) + TypeScript food-traceability "recall-readiness" product. It is **deliberately scaffold-stage and fixture-only**: the live HTTP runtime serves in-memory fixtures, while a provider-neutral security boundary and a PostgreSQL + Drizzle persistence layer exist as wired-but-not-route-activated scaffolding.
 

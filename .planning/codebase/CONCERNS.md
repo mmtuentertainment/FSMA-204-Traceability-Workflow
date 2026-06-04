@@ -1,6 +1,6 @@
 # CONCERNS
 
-> Snapshot date: 2026-06-04 · Git HEAD: `51141c9` ("Batch 58").
+> Snapshot date: 2026-06-04 · Reflects the "Batch 58" working state (source lands on `main` via the phase-3 PR #12).
 >
 > **Read this first.** This is a **scaffold-stage** repository. The single largest set of "concerns" below is a set of **intentional, documented absences** (no production auth, database wiring, RBAC provider, or persisted audit on the live request path). They are framed as such. The product's guardrail (`.planning/STATE.md`, `AGENTS.md`, `CLAUDE.md`) is explicit: **production providers, persistence, RBAC, audit sinks, imports, exports, and CSV generation require an approved phase/batch with `ops/deltas/` evidence** — they are deliberately *not* built yet, and that is by design, not a bug. The real risk is mistaking the OpenAPI surface, or the staged-but-unwired provider module, for shipped capability.
 
