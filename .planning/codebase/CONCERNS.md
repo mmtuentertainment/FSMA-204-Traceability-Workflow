@@ -1,66 +1,87 @@
+# CONCERNS
+
+> Snapshot date: 2026-06-04 · Git HEAD: `51141c9` ("Batch 58").
+>
+> **Read this first.** This is a **scaffold-stage** repository. The single largest set of "concerns" below is a set of **intentional, documented absences** (no production auth, database wiring, RBAC provider, or persisted audit on the live request path). They are framed as such. The product's guardrail (`.planning/STATE.md`, `AGENTS.md`, `CLAUDE.md`) is explicit: **production providers, persistence, RBAC, audit sinks, imports, exports, and CSV generation require an approved phase/batch with `ops/deltas/` evidence** — they are deliberately *not* built yet, and that is by design, not a bug. The real risk is mistaking the OpenAPI surface, or the staged-but-unwired provider module, for shipped capability.
+
 ---
-last_mapped_commit: 47b3adb8ba0224e2c30edf112661f77b4d69410c
-mapped_at: 2026-06-01
-focus: concerns
----
 
-# Concerns
+## Tech Debt
 
-## Scope Creep Risk
+### Intentional (scaffold-stage, approval-gated — not defects)
 
-- The repo is intentionally a lightweight FSMA 204 readiness workflow, not an ERP or broad operations platform.
-- Future work can easily over-expand into database, auth, tenant model, RBAC, audit log, supplier portal, OCR, dashboard, mobile scanning, ERP integration, or legal determination features.
-- `AGENTS.md`, `.planning/STATE.md`, `.planning/HANDOFF.json`, `ops/memory/product.md`, and this map should preserve the narrow scope.
+- **Production providers are designed but not wired.** The provider-neutral seams in `lib/security/request-context.ts`, `lib/security/authorization.ts`, `lib/api/route-boundary.ts`, `lib/api/mock-recall-source.ts`, and `lib/security/idempotency-audit.ts` are shape-only with public/fixture default adapters. Concrete production adapters are explicitly deferred to approved batches.
+- **A full PostgreSQL/Drizzle provider exists but is NOT on any live route.** `lib/db/exception-review-provider.ts` (780 lines) implements tenant-membership RBAC, transactional `FOR UPDATE` review, a durable idempotency-record lifecycle (reserve/replay/conflict/reclaim/in-flight), and persisted audit-event writes. It is consumed **only** by tests (`tests/db/exception-review-provider-a1.test.ts`, `tests/db/exception-review-provider-a2.test.ts`) and tooling. The live PATCH route (`app/api/traceability/exceptions/[exceptionId]/route.ts`) instead uses the in-memory `fixtureExceptionReviewRepository` (a `FixtureExceptionReviewRepository`), `fixtureExceptionReviewIdempotencyStore` (a `FixtureIdempotencyStore`), and `fixtureExceptionReviewAuditSink` (a `FixtureAuditSink`) — the store/sink classes live in `lib/security/idempotency-audit.ts` and are wired into the fixture instances exported from `lib/api/exception-review.ts`. This non-wiring is a **test-enforced invariant**: `tests/db/exception-review-provider-a1.test.ts:577-579` asserts the route source does *not* import `lib/db/client` or `exception-review-provider`. Activating the provider on the route is the gated "Batch B" work.
+- **`unused-*` fallow rules are relaxed to `warn`, not `error`.** `.fallowrc.jsonc` keeps `unused-files`, `unused-exports`, and `unused-types` at `warn` (in the `rules` block, around lines 81-83) precisely because staged-but-unwired code is expected at this stage. `CLAUDE.md` and the config comment both instruct tightening these back to `error` once the product matures. Eight provider/fixture exports currently surface as `unused-exports` warnings (see Test Coverage Gaps).
+- **Two contract fixtures stand in for all runtime data.** `lib/api/mock-recall.ts` hard-codes a single `MockRecallDetail` (`contract-fixture-ready-for-review`); `lib/api/exception-review.ts` hard-codes a single `ExceptionRecord` (`fixture-exception-ready-for-review`). Every other id returns 404. Storage-backed records are deferred.
+- **`toPacketCsv` in `lib/api/mock-recall.ts:39-51` intentionally has no CSV escaping/quoting.** It re-derives the exact bytes the contract example pins; production CSV generation over arbitrary records is explicitly deferred to the export phase. Safe for the fixture, unsafe for arbitrary data — and labeled as such in-code.
 
-## Phase 3 Boundary Risk
+### Genuine (not intentional)
 
-- Phase 3 has started but is not complete.
-- The boundary skeleton is real code, but it is only provider-neutral scaffolding around existing read routes.
-- The exception-review PATCH is also real code, but it is fixture-only and limited to one approved route.
-- The default resolver and policy are public-fixture adapters, not production auth or tenant enforcement.
-- The PATCH route uses local/test fixture auth, in-memory fixture idempotency, and in-memory fixture audit evidence; production provider wiring, durable idempotency, and persisted audit remain absent.
-- The Phase 4-8 Non-Goal lift has been approved only for the Batch 34 fixture-only exception-review PATCH. Broader supplier, lot/event, export, CSV, database, production auth, and production persistence work remains gated.
+- **Large surface-to-runtime gap.** `api/openapi.yaml` (430 lines) declares 10 path items / 12 operations across `lots`, `events`, `exceptions`, `supplier-requests`, and `mock-recalls`. Only **3** are implemented: `GET /mock-recalls/{id}`, `GET /mock-recalls/{id}/packet.csv`, and `PATCH /exceptions/{exceptionId}` (fixture-only). The other 9 operations (all lots/events ops, both supplier-request ops, the `mock-recalls` POST, and the exceptions list) have no handler. This is expected for the phase, but the documentation gap between "contract says" and "server does" is the easiest thing to misread.
+- **Idempotency/audit logic is duplicated across two implementations.** The fixture path (`lib/api/exception-review.ts`) and the provider path (`lib/db/exception-review-provider.ts`) re-implement the same review semantics (status/reason validation, idempotency replay vs conflict, before/after audit metadata) with subtly different role vocabularies (fixture: `viewer`/`reviewer`/`admin`; provider: `read_only`/`quality_reviewer`/`tenant_admin`). Canonical JSON hashing was already de-duplicated into `lib/shared/canonical-json.ts`, but the review/idempotency state machines remain parallel and must be kept in lock-step until the provider replaces the fixture.
+- **`lib/db/client.ts` caches a process-global `DbClient`** (`cachedClient`, wrapping a pg `Pool`). A `closeDbClient()` helper exists (lines 51-61) but is **not wired into the Next.js lifecycle**. Harmless today (nothing on the request path calls `getDb()`), but a connection-leak / hot-reload-pool-exhaustion hazard the moment the provider is wired.
 
-## Contract Runtime Gap
+## Known Bugs
 
-- `api/openapi.yaml` defines many endpoints that do not exist at runtime.
-- `MockRecallDetail` exists in OpenAPI and generated types, and one contract fixture exists for runtime smoke checks, but no persisted or storage-backed success flow exists.
-- The CSV endpoint has one fixture-derived output for the contract smoke check, but no production CSV generation workflow exists.
-- The exceptions PATCH endpoint is contracted and implemented only as the approved fixture-backed first mutating write.
+Not detected. No `TODO`/`FIXME`/`HACK`/`XXX` markers exist in source (`lib/**`, `app/**`, `tests/**`, `scripts/**`); the only such strings in the working tree are `// fallow-ignore-next-line …` examples inside committed audit JSON artifacts under `.audit/` (which is untracked — `git ls-files .audit/` returns nothing), not code defects. The committed gates pass: the fallow CI audit run as the gate runs it (`FALLOW_COVERAGE=coverage/provider/coverage-final.json npx fallow audit --base origin/main`) returns **verdict `warn` (exit 0)** with 8 unused-export findings and 1 complexity finding, and `tests/db/*` exercise the provider against a real Postgres.
 
-## Testing Gap
+Watch items (not confirmed bugs):
+- The fixture PATCH route validates the body via `readExceptionPatch` (`lib/api/exception-review.ts:106`) but **rejects unknown fields** and only whitelists 4 patch fields (`status`, `review_reason`, `review_notes`, `human_review_required`); the provider path validates differently (it relies on its own `ProviderExceptionPatch` shape). Divergent validation between the two paths is a latent inconsistency, not a present-day bug, because only the fixture path is live.
 
-- There is one committed MockRecall contract smoke check.
-- Broader unit, integration, and end-to-end test coverage is absent.
-- The baseline gate is `npm ci`, `npm run api:check`, `npm run typecheck`, `npm run build`, `npm run test:mock-recall:contract`, and `npm run test:exception-review:patch`.
-- The fixture-only exception-review PATCH focused direct test is part of the package/CI gate and covers 401/403, tenant isolation, validation, idempotency replay/conflict, and in-memory audit append.
-- Production provider, durable idempotency, persisted audit, and non-public tenant paths are not operational yet.
-- Contracted but unimplemented routes have no runtime tests.
+## Security Considerations
 
-## Generated File Risk
+The security posture is a **deny-by-default boundary skeleton**, correct in structure, with deliberately non-production adapters.
 
-- `lib/api/generated/openapi-types.ts` should not be hand-edited.
-- Changes to `api/openapi.yaml` should be paired with `npm run api:types` and `npm run api:types:check`.
-- Next build and typecheck may create ignored artifacts such as `.next/`, `next-env.d.ts`, and `*.tsbuildinfo`.
+- **No production authentication exists.** The live read routes use `publicFixtureContextResolver` (`lib/security/request-context.ts:73`), which authenticates nobody and assigns a single implicit `public-fixture` tenant. The PATCH route uses `fixtureAuthContextResolver`, which derives identity from **hard-coded bearer tokens** (`FIXTURE_AUTH_TOKENS`: `fixture-reviewer-token`, `fixture-viewer-token`, `fixture-other-tenant-reviewer-token`). These are test fixtures, **not secrets** (no credential files are tracked — `git ls-files` shows none; `.gitignore:5` ignores `.env*.local`). The fixture-auth runtime is **disabled when `NODE_ENV === "production"`** (`isFixtureAuthRuntimeEnabled`, lines 64-68), so a production build degrades the PATCH to unauthenticated → 401, rather than silently accepting fixture tokens. That is a deliberate fail-safe, but it also means the PATCH route has **no working auth in production at all** until a real resolver is wired.
+- **Tenant identity is correctly modeled as server-derived.** `request-context.ts` documents and enforces that tenant id comes from trusted auth state, never from request bodies/query/route/headers. The fixture resolver honors this. This is the right invariant for future production work.
+- **Authorization is deny-by-default and leak-safe.** `lib/api/route-boundary.ts` authorizes the action class *before* the tenant-scoped load, so a cross-tenant resource resolves to 404 (not 403), avoiding existence leakage. `publicFixturePolicy` allows only the two read actions; `fixtureExceptionReviewPolicy` requires `authenticated` state + the `reviewer` role. Structurally sound; the gap is simply that production claim-mapping and role names are unresolved.
+- **Audit evidence is non-durable on the live path.** Accepted PATCH transitions append to an in-memory `FixtureAuditSink` (lost on restart). The durable audit-event write (`appendExceptionReviewAuditEvent` in `lib/db/exception-review-provider.ts:465`) and the `audit_events` table (`lib/db/schema.ts:44`) exist but are unwired. For an FSMA readiness product, **persisted, tamper-evident audit is a hard production requirement** and is correctly gated behind an approved batch.
+- **No rate limiting, request-size limits, CSRF, or input-size caps** on the mutating PATCH beyond the Idempotency-Key length check (8–200 chars) and the 4-field whitelist. Acceptable for a fixture endpoint; required before any non-fixture activation.
+- **The deny-by-default 401/403 branches in the read boundary are dormant.** `publicFixturePolicy` always allows the read actions, so `unauthorizedResponse`/`forbiddenResponse` are unreachable on live read routes today — meaning that auth-failure path is exercised only by tests, not in production traffic.
 
-## API Design Guardrails
+## Performance Bottlenecks
 
-- Future mutating handlers must implement idempotency behavior matching `Idempotency-Key`.
-- Future auth must derive tenant context server-side and preserve tenant isolation without exposing tenant IDs in request shapes.
-- Future errors should keep `application/problem+json`.
-- Future review-sensitive paths should preserve explicit `human_review_required` semantics.
-- Cross-tenant misses should avoid existence leaks.
+Not applicable at current scale. The live runtime serves two hard-coded objects from module memory; there is no I/O, no database, and no per-request allocation of consequence. The only forward-looking note: the provider path opens a transaction with a `SELECT … FOR UPDATE` row lock per review (`lib/db/exception-review-provider.ts`, around lines 213-221) plus an idempotency `INSERT … ON CONFLICT DO NOTHING` with fallback `SELECT … FOR UPDATE` (around lines 303-339). That is correct for correctness-under-concurrency but will be the throughput-limiting section once the provider is live; it is not a bottleneck today because it never runs in production.
 
-## Truth-Surface Drift
+## Fragile Areas
 
-- Older historical deltas and phase planning docs can still describe Batch 31/33 as gated because they predate Batch 34. Treat them as provenance, not current-state docs.
-- Current-state surfaces should say Phase 3 is started but incomplete: the boundary skeleton and fixture-only exception-review PATCH exist, while production providers and broader Phase 4-8 runtime work remain absent.
-- `.planning/HANDOFF.json` still names an older `codebase_map_commit`; the map documents now carry their own `last_mapped_commit` front matter for `47b3adb`.
-- `INTEL.md` is local-only and untracked; do not treat it as committed repo truth unless Matt explicitly asks.
+- **Coverage-snapshot freshness coupling.** The fallow health gate's `maxCrap=30` (`.fallowrc.jsonc`, in the complexity block around line 71) only holds because a committed Istanbul snapshot (`coverage/provider/coverage-final.json`) feeds real coverage for the provider functions via `FALLOW_COVERAGE`. The snapshot **fails closed**: editing any covered provider function changes its content hash, the stale coverage stops matching, the function reads as 0%, CRAP re-trips, and the gate blocks until `npm run test:db:coverage` regenerates it. This is a feature, but it means **every provider edit forces a coverage regen against a live Postgres** (CI job `db-provider-tests` enforces this; `ops/deltas/0058-db-provider-tests-ci-and-reproducible-coverage.md`). Forget the regen and the gate fails. Without the coverage env, the same functions show CRAP 132–182 ("critical") — confirmed by running `fallow health` without `FALLOW_COVERAGE` (e.g. `reviewTraceabilityExceptionWithProvider` 182, `reserveIdempotencyRecord` 156, the fixture-API `readExceptionPatch` 182, the PATCH route 132).
+- **The `readExceptionPatch` validator (`lib/api/exception-review.ts:106`) is the one function above the complexity threshold even with coverage** — fallow reports it as CRAP 182 / `coverage_source: estimated` / `coverage_tier: none` (cyclomatic 13) because the provider coverage snapshot does not cover the fixture-API file. It is exercised by `tests/exception-review-patch.test.ts`, but that suite is not coverage-instrumented into the gate snapshot, so the gate sees it as uncovered. It currently rides through as a `warn`, not a block.
+- **Two parallel role/status vocabularies** (fixture vs provider, noted under Tech Debt) are a refactor hazard: a change to allowed statuses or roles must be made in `lib/api/exception-review.ts`, `lib/db/exception-review-provider.ts`, `lib/security/authorization.ts`/`request-context.ts`, **and** the DB CHECK constraints in `lib/db/schema.ts` (the `tenant_memberships_role_check` at lines 37-39 and the type/status/review_reason checks at lines 101-112). Four sources of truth for the same enums.
+- **TS extension-import style is inconsistent.** Some modules import with explicit `.ts` extensions (`lib/api/exception-review.ts`, the PATCH route, `lib/db/client.ts`) while the read routes/modules import without (`mock-recall-source.ts`, `route-boundary.ts`, and the mock-recall route). `allowImportingTsExtensions: true` in `tsconfig.json` permits both, but the mixed convention is a minor footgun.
+- **Windows CRLF risk on shell scripts.** Per project memory, editing `.sh` files on this machine can save CRLF and break bash on Linux/CI; `.gitattributes` enforces LF. The agent commit gate (`.claude/hooks/fallow-gate.sh`) is one such script.
 
-## Operational Concerns
+## Scaling Limits
 
-- `PLAN.md` is tracked and should not be edited unless explicitly approved.
-- No remote push should be assumed from local commits unless requested.
-- `gh pr view <n>` plus `gh pr checks <n>` is the reliable live mergeability source for future PRs.
-- For docs-only batches, explicitly prove protected paths stayed untouched before staging or committing.
+Not applicable to current functionality (no persistence, no concurrency, no multi-tenant data on the live path). Forward-looking, the schema is built for scale where it matters: `lib/db/schema.ts` indexes tenant-scoped queries (`tenant_memberships_tenant_role_idx`, `traceability_exceptions_tenant_status_idx`, `audit_events_tenant_created_idx`, `idempotency_records_tenant_lifecycle_idx`/`idempotency_records_expires_idx`) and uses identity-generated bigint PKs. The append-only `audit_events` table has no retention/partitioning policy yet — a future concern for a high-write audit log, deferred with the rest of persistence.
+
+## Dependencies at Risk
+
+- **Runtime deps are minimal and current**: `next@^16.2.6`, `react@^19.2.6` (with `react-dom@^19.2.6`), `drizzle-orm@^0.45.2`, `pg@^8.21.0`. No deprecated or abandoned packages detected; fallow's audit reports **0 unused, 0 unlisted, 0 unresolved** dependencies. fallow itself is `^2.87.0`.
+- **Node engine pin is aggressive**: `engines.node >= 22.6` (`package.json:23-25`). The `.ts` test scripts rely on Node's `--experimental-strip-types` for running test files directly, and `README.md` documents that the experimental type-stripping / module-type warnings are expected. This couples the test harness to an experimental Node feature; a future Node release changing strip-types behavior could break `test:db`, `test:exception-review:patch`, and `test:db-client:import`.
+- **`drizzle-kit@^0.31.10`** is the only tool that touches migrations; `db:check` (which runs `db:migrations:check` = `drizzle-kit check` plus `test:db-client:import`) validates migration metadata without a DB, but the CI `db-provider-tests` job depends on `drizzle-kit migrate` against `postgres:16-alpine`. A drizzle-kit major bump could change the migration metadata format and invalidate the committed `lib/db/migrations/meta/*` snapshots.
+- **No test runner / assertion framework**: tests use Node's built-in `assert` and bespoke `run()` harnesses (no test runner is listed in `package.json`). Lightweight, but there is no test isolation, parallelism, or fixture management beyond manual `TRUNCATE`/reset; the A1/A2 suites must run sequentially (the suite loop in `scripts/run-db-coverage.mjs`, around lines 96-100) because they share tables.
+
+## Missing Critical Features
+
+All absences below are **intentional and approval-gated** (per `.planning/STATE.md` "Current absences" and the `AGENTS.md`/`CLAUDE.md` guardrails). Listed so the gap is explicit, not to imply they are overdue:
+
+- Production authentication provider (no identity provider, session, or token verification on the live path).
+- Route-wired database persistence (the `pg`/Drizzle client and provider exist but are unreachable from any route).
+- Production RBAC provider and production tenant/membership model (only fixture tokens and fixture tenants exist live).
+- Persisted, durable audit log on the request path (in-memory only today).
+- Persisted traceability records; imports; exports; production CSV generation over real data.
+- Supplier-request workflow, lot/event workflow, and the list endpoints declared in OpenAPI but unimplemented.
+- UI beyond the static scaffold page (`app/page.tsx` is a static informational scaffold — one heading and two paragraphs; no interactive UI).
+- The optional `@/*` path alias (deferred per `.planning/STATE.md`).
+
+**Guardrail:** none of the above may be implemented without an approved phase/batch and an `ops/deltas/` entry.
+
+## Test Coverage Gaps
+
+- **The live PATCH route is not the code path covered by the provider DB tests.** `tests/db/exception-review-provider-a1.test.ts` (595 lines) and `-a2.test.ts` (429 lines) exercise `lib/db/exception-review-provider.ts` against a real Postgres, and that is what the committed `coverage/provider/coverage-final.json` snapshot reflects. But that provider is **not wired to the route**. The actually-shipped fixture PATCH path is covered separately by `tests/exception-review-patch.test.ts` (362 lines), which is **not** part of the gate's coverage snapshot — so the fixture validator `readExceptionPatch` reads as uncovered to fallow (CRAP 182, estimated).
+- **No automated test exercises the live HTTP route handlers end-to-end.** `tests/mock-recall-contract-smoke.mjs` checks contract bytes against the fixture, and the patch test calls the route's `PATCH` export directly, but there is no integration test that boots Next.js and hits the routes over HTTP.
+- **Eight provider/fixture exports are unused in the graph** (fallow `unused-exports`, severity `warn`): `FIXTURE_EXCEPTION_ID` (line 36) and `FixtureExceptionReviewRepository` (line 58) in `lib/api/exception-review.ts`, and `withProviderExceptionReviewTransaction` (154), `reserveIdempotencyRecord` (278), `completeIdempotencyRecord` (424), `appendExceptionReviewAuditEvent` (465), `appendExceptionReviewErrorAuditEvent` (503), `reviewTraceabilityExceptionWithProvider` (541) in `lib/db/exception-review-provider.ts`. These are consumed by the test suites, which are declared as fallow `entry` points — so the warnings reflect that the **production graph** does not yet reach them, which is the accurate scaffold-stage signal, not dead code to delete (trace before removing; per `CLAUDE.md` agent rules).
+- **Read routes have no negative-path coverage in the gate beyond the smoke fixture.** The dormant 401/403 boundary branches (`unauthorizedResponse`/`forbiddenResponse` on the read path) are unreachable with the public policy and are only validated indirectly via unit-level boundary tests, not as part of the committed CI smoke checks.
+- **No coverage instrumentation for `app/**`, `lib/api/mock-recall*.ts`, `lib/security/**`, or `lib/shared/**` feeds the gate.** The only coverage source is the provider DB snapshot (`istanbul_matched: 19 / istanbul_total: 179` functions in the audit's complexity summary), so the bulk of shipped code is scored by fallow's static *estimate*, not measured coverage.
