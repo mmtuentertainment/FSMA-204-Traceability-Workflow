@@ -20,8 +20,8 @@ This is a fixture-only / scaffold-stage repository. There is **no third-party te
 npm run test:exception-review:patch   # fixture-only PATCH suite (type-stripped .ts)
 npm run test:mock-recall:contract     # boots `next start`, hits live routes (.mjs)
 npm run test:db-client:import         # DB client import/guard check (type-stripped .ts)
-npm run test:db                        # provider-backed Postgres suites a1 + a2 (needs TEST_DATABASE_URL)
-npm run test:db:coverage               # runs a1+a2 under V8 coverage, regenerates the snapshot
+npm run test:db                        # provider-backed Postgres suites a1 + a2 + a3 (needs TEST_DATABASE_URL)
+npm run test:db:coverage               # runs a1+a2+a3 under V8 coverage, regenerates the snapshot
 npm run db:check                       # drizzle migration check (db:migrations:check) + db-client import test
 npm run api:check                      # api:lint (redocly lint) + api:types:check (openapi-typescript --check)
 npm run typecheck                      # tsc --noEmit
@@ -179,14 +179,14 @@ The DB suites also provide seed factories with optional-arg defaults: `seedMembe
 - A **committed Istanbul snapshot** lives at `coverage/provider/coverage-final.json` (docs: `coverage/provider/README.md`).
 - `fallow audit` reads it via the `FALLOW_COVERAGE` env var (set in CI and the local commit hook).
 - It **fails closed:** `fallow` matches coverage to a function by content hash; editing a covered function changes its hash, the snapshot stops matching, the function reads as 0%, CRAP re-inflates, and the gate fails — forcing a regenerate.
-- Tool: `c8` (devDependency `^11.0.0`) converts Node V8 coverage to Istanbul JSON. `scripts/run-db-coverage.mjs` orchestrates V8 capture of the a1/a2 suites (run sequentially under `NODE_V8_COVERAGE`) and calls `scripts/normalize-coverage.mjs` (repo-relative POSIX paths, `-1` → `0`, `lib/**` only, deterministic key order for cross-OS byte-stable output).
+- Tool: `c8` (devDependency `^11.0.0`) converts Node V8 coverage to Istanbul JSON. `scripts/run-db-coverage.mjs` orchestrates V8 capture of the a1/a2/a3 suites (run sequentially under `NODE_V8_COVERAGE`) and calls `scripts/normalize-coverage.mjs` (repo-relative POSIX paths, `-1` → `0`, `lib/**` only, deterministic key order for cross-OS byte-stable output).
 
 **Regenerate / view coverage:**
 ```bash
 # Requires a disposable Postgres test DB; use 127.0.0.1, never localhost.
 # (Port 55432 below is illustrative for a local container — match your own.)
-export DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/fsma204_a1a2_test"
-export TEST_DATABASE_URL="$DATABASE_URL"          # db name must match /(^|[_-])(test|a1)([_-]|$)/i
+export DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/fsma204_provider_test"
+export TEST_DATABASE_URL="$DATABASE_URL"          # db name has the "test" token → passes every suite fence (a1/a2/a3)
 npx drizzle-kit migrate --config drizzle.config.ts
 npm run test:db:coverage                          # writes coverage/provider/coverage-final.json
 

@@ -265,9 +265,17 @@ const tests: TestCase[] = [
       assert.equal(await countRows("audit_events"), 0);
 
       // Documented expectation: append-only audit evidence is a CONVENTION in the
-      // current repository/service slice. DB-level enforcement (triggers / REVOKE) is
-      // deferred to Batch B runtime hardening (T6/T9). This test is the regression
-      // guard that will flip — and demand updating — the day enforcement is added.
+      // current repository/service slice. DB-level enforcement is deferred to Batch B
+      // runtime hardening (T6/T9).
+      //
+      // NOTE for Batch B — this test connects as the Postgres superuser/owner, which
+      // BYPASSES grants, so a `REVOKE UPDATE,DELETE` alone would NOT flip this guard
+      // (the raw UPDATE/DELETE above would still succeed = silently green). Enforce via
+      // a BEFORE UPDATE/DELETE trigger (declare it ENABLE ALWAYS — fires for the
+      // owner/superuser too) AND/OR re-run this test as a restricted non-owner role,
+      // then invert the rowCount===1 success asserts above to expect rejection. This is
+      // the regression guard that must flip — and demand updating — the day enforcement
+      // is added.
     },
   },
 ];
