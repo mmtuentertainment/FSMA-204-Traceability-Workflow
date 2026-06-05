@@ -584,6 +584,9 @@ export async function reviewTraceabilityExceptionWithProvider(
   // Optional rate-limit checkpoint: AFTER RBAC (an unauthorized actor is forbidden, not
   // rate-limited) and BEFORE the idempotency reservation, so a deny writes no rows and
   // needs no cleanup. Absent limiter => this branch is skipped and the path is unchanged.
+  // A rejecting check() is intentionally NOT caught here: it propagates, rolls back the
+  // transaction, and fails the review CLOSED (see the RateLimiter contract in
+  // lib/security/rate-limit.ts).
   if (request.limiter) {
     const decision = await request.limiter.check({
       tenantId: request.tenantId,

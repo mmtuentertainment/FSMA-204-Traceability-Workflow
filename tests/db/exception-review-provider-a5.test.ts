@@ -12,6 +12,8 @@ import {
 } from "../../lib/db/exception-review-provider.ts";
 import {
   FixtureFixedWindowRateLimiter,
+  type RateLimiter,
+  type RateLimitDecision,
   type RateLimitScope,
 } from "../../lib/security/rate-limit.ts";
 import { rateLimitedResponse } from "../../lib/api/problem.ts";
@@ -19,7 +21,7 @@ import { rateLimitedResponse } from "../../lib/api/problem.ts";
 // Batch 62 — rate-limit posture (Area 5). Verifies that an OPTIONAL injected limiter,
 // checked AFTER RBAC and BEFORE the idempotency reservation, can deny a fully-valid
 // review with a `rate_limited` outcome that touches NO database state, while keeping the
-// limiter-absent path byte-identical to a1-a4. Load-bearing IDs: A5-02..06, A5-12.
+// limiter-absent path byte-identical to a1-a4. Load-bearing IDs: A5-02..07, A5-12.
 
 const { Pool: PgPool } = pg;
 
@@ -174,6 +176,24 @@ function denyLimiter(): FixtureFixedWindowRateLimiter {
 // An allow limiter with headroom: the single review under test is well under the limit.
 function allowLimiter(): FixtureFixedWindowRateLimiter {
   return new FixtureFixedWindowRateLimiter(5, 60_000, () => 0);
+}
+
+// A recording limiter that captures every scope it is asked about and returns a fixed
+// decision. The deny/allow fixtures above decide by COUNT alone, so they would still
+// pass even if the provider mapped a wrong/typo'd scope field. This limiter pins the
+// EXACT RateLimitScope the provider passes to check() (see A5-07).
+class RecordingRateLimiter implements RateLimiter {
+  readonly scopes: RateLimitScope[] = [];
+  private readonly decision: RateLimitDecision;
+
+  constructor(decision: RateLimitDecision) {
+    this.decision = decision;
+  }
+
+  async check(scope: RateLimitScope): Promise<RateLimitDecision> {
+    this.scopes.push(scope);
+    return this.decision;
+  }
 }
 
 async function countRows(table: string): Promise<number> {
@@ -401,6 +421,47 @@ const tests: TestCase[] = [
       clock.ms = 1_000;
       assert.equal((await limiter.check(scope)).status, "allow");
       assert.equal((await limiter.check(scope)).status, "allow");
+    },
+  },
+  {
+    name: "A5-07 provider passes the exact reviewScope() to limiter.check (allow and deny)",
+    async run() {
+      // Allow path: capture the scope the provider builds and pin it to reviewScope().
+      await resetTables();
+      await seedMembership();
+      await seedException();
+
+      const allowSpy = new RecordingRateLimiter({ status: "allow" });
+      const allowOutcome = await reviewTraceabilityExceptionInTransaction(
+        pool,
+        request({ limiter: allowSpy }),
+      );
+
+      assert.equal(allowOutcome.status, "accepted");
+      assert.equal(
+        allowSpy.scopes.length,
+        1,
+        "limiter.check must be called exactly once per review",
+      );
+      assert.deepEqual(allowSpy.scopes[0], reviewScope());
+
+      // Deny path: the same scope mapping must hold regardless of the decision.
+      await resetTables();
+      await seedMembership();
+      await seedException();
+
+      const denySpy = new RecordingRateLimiter({
+        status: "deny",
+        retryAfterSeconds: 60,
+      });
+      const denyOutcome = await reviewTraceabilityExceptionInTransaction(
+        pool,
+        request({ limiter: denySpy }),
+      );
+
+      assert.equal(denyOutcome.status, "rate_limited");
+      assert.equal(denySpy.scopes.length, 1);
+      assert.deepEqual(denySpy.scopes[0], reviewScope());
     },
   },
 ];

@@ -19,7 +19,8 @@ export function problemResponse(
 
 // Named catalog of canonical Problem shapes (type/title/status). Each entry owns the
 // fields a caller must not re-decide; per-call detail/instance are attached at the
-// call site. One entry today; the request boundary adds auth entries behind this seam.
+// call site. Entries cover the request boundary's not-found, auth, conflict, validation,
+// and rate-limit responses.
 const PROBLEM_CATALOG = {
   notFound: { type: "about:blank", title: "Resource not found", status: 404 },
   unauthorized: {

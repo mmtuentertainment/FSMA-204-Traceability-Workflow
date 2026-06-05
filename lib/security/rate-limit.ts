@@ -27,6 +27,13 @@ export type RateLimitDecision =
   | { status: "allow" }
   | { status: "deny"; retryAfterSeconds: number };
 
+// A limiter resolves `check` to allow or deny; it does NOT model its own failure. A real
+// implementation that cannot reach its backing store must still RESOLVE a decision,
+// because the live checkpoint (lib/db/exception-review-provider.ts) does not catch a
+// rejected check(): a rejection propagates out of the review transaction, rolls it back,
+// and fails the write CLOSED. That fail-closed default is intentional for a compliance
+// write path; a future batch wanting availability-over-enforcement must add an explicit
+// try/catch at the checkpoint rather than rely on this emergent behavior.
 export interface RateLimiter {
   check(scope: RateLimitScope): Promise<RateLimitDecision>;
 }
