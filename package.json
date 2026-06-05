@@ -16,7 +16,7 @@
     "test:db-client:import": "node --experimental-strip-types tests/db-client-import.test.ts",
     "test:mock-recall:contract": "node tests/mock-recall-contract-smoke.mjs",
     "test:exception-review:patch": "node --experimental-strip-types tests/exception-review-patch.test.ts",
-    "test:db": "node --experimental-strip-types tests/db/exception-review-provider-a1.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a2.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a3.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a4.test.ts",
+    "test:db": "node --experimental-strip-types tests/db/exception-review-provider-a1.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a2.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a3.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a4.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a5.test.ts",
     "test:db:coverage": "node scripts/run-db-coverage.mjs",
     "fallow:ci": "fallow audit --fail-on-issues"
   },

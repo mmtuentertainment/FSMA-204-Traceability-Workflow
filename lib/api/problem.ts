@@ -19,7 +19,8 @@ export function problemResponse(
 
 // Named catalog of canonical Problem shapes (type/title/status). Each entry owns the
 // fields a caller must not re-decide; per-call detail/instance are attached at the
-// call site. One entry today; the request boundary adds auth entries behind this seam.
+// call site. Entries cover the request boundary's not-found, auth, conflict, validation,
+// and rate-limit responses.
 const PROBLEM_CATALOG = {
   notFound: { type: "about:blank", title: "Resource not found", status: 404 },
   unauthorized: {
@@ -33,6 +34,11 @@ const PROBLEM_CATALOG = {
     type: "about:blank",
     title: "Request validation failed",
     status: 422,
+  },
+  rateLimited: {
+    type: "about:blank",
+    title: "Too Many Requests",
+    status: 429,
   },
 } as const;
 
@@ -86,4 +92,19 @@ export function validationErrorResponse(
     detail,
     instance,
   });
+}
+
+// Rate-limited (429) error. The contract's RateLimited response declares a Retry-After
+// header (integer seconds, minimum 1); the value is clamped to a whole second >= 1 so a
+// non-positive or fractional back-off never produces a non-conformant header.
+export function rateLimitedResponse(
+  instance: string,
+  detail: string,
+  retryAfterSeconds: number,
+): Response {
+  const retryAfter = Math.max(1, Math.ceil(retryAfterSeconds));
+  return problemResponse(
+    { ...PROBLEM_CATALOG.rateLimited, detail, instance },
+    { "Retry-After": String(retryAfter) },
+  );
 }
