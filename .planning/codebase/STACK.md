@@ -45,7 +45,7 @@ Resolved versions are from `package-lock.json`.
 | `drizzle-orm` | `^0.45.2` | `0.45.2` | ORM / typed schema for the scaffolded DB layer |
 | `pg` | `^8.21.0` | `8.21.0` | PostgreSQL driver (`Pool`) behind the DB client seam |
 
-Note: `drizzle-orm` and `pg` are declared as runtime deps but currently only reachable from the scaffolded `lib/db/**` layer and the provider tests — not from any wired route.
+Note: `drizzle-orm` and `pg` are declared as runtime deps but currently only reachable from the scaffolded `lib/db/**` layer and the provider tests — not from any wired route. Batch 62 added the rate-limit checkpoint seam `lib/security/rate-limit.ts` (`RateLimiter` interface, `RateLimitScope`, status-discriminated `RateLimitDecision`, `noopRateLimiter`, in-memory `FixtureFixedWindowRateLimiter` with an injected clock) and an optional checkpoint inside `reviewTraceabilityExceptionWithProvider` (`lib/db/exception-review-provider.ts:590-603`, after RBAC / before the idempotency reservation) plus `rateLimitedResponse` in `lib/api/problem.ts:100-110`; this introduced **no new runtime dependency** — the limiter uses only an injected clock (`lib/security/rate-limit.ts:1-7,61`).
 
 ### Dev dependencies (`package.json` `devDependencies`)
 
@@ -81,6 +81,6 @@ Note: `drizzle-orm` and `pg` are declared as runtime deps but currently only rea
 ## Platform Requirements
 
 - **Node.js `>=22.6`** (`package.json:23-25`); CI on `22.x` (`ubuntu-latest`).
-- **PostgreSQL** — required only by the scaffolded DB layer and the provider DB test suites, **not** by `typecheck`/`build`/the live fixture routes. `drizzle.config.ts` has a credential-free fallback so `npm run db:check` runs without a database. The provider tests and coverage regen require a disposable Postgres (CI uses `postgres:16-alpine`, `.github/workflows/contract-gate.yml:73`; the regen README pins `127.0.0.1`, never `localhost`, at `coverage/provider/README.md:33-34`).
-- **OS** — repo developed on Windows 11 (per project memory); CI runs on Linux (`ubuntu-latest`). Cross-OS concerns are handled deliberately: `.gitattributes` enforces LF; coverage paths are stored repo-relative + POSIX (`coverage/provider/README.md:28-29`); the coverage script avoids shell env-prefixes for cross-platform parity (`scripts/run-db-coverage.mjs:4-6`).
+- **PostgreSQL** — required only by the scaffolded DB layer and the provider DB test suites, **not** by `typecheck`/`build`/the live fixture routes. `drizzle.config.ts` has a credential-free fallback so `npm run db:check` runs without a database. The provider tests and coverage regen require a disposable Postgres (CI uses `postgres:16-alpine`, `.github/workflows/contract-gate.yml:73`; the regen README pins `127.0.0.1`, never `localhost`, at `coverage/provider/README.md:39-40`).
+- **OS** — repo developed on Windows 11 (per project memory); CI runs on Linux (`ubuntu-latest`). Cross-OS concerns are handled deliberately: `.gitattributes` enforces LF; coverage paths are stored repo-relative + POSIX (`coverage/provider/README.md:34-35`); the coverage script avoids shell env-prefixes for cross-platform parity (`scripts/run-db-coverage.mjs:4-6`).
 - **`bash` + `jq`** — required by the local fallow agent gate hook (`.claude/hooks/fallow-gate.sh`); the hook fails open if `jq`/`fallow` are missing (per `CLAUDE.md`).
