@@ -34,6 +34,11 @@ const PROBLEM_CATALOG = {
     title: "Request validation failed",
     status: 422,
   },
+  rateLimited: {
+    type: "about:blank",
+    title: "Too Many Requests",
+    status: 429,
+  },
 } as const;
 
 export function mockRecallNotFoundResponse(
@@ -86,4 +91,19 @@ export function validationErrorResponse(
     detail,
     instance,
   });
+}
+
+// Rate-limited (429) error. The contract's RateLimited response declares a Retry-After
+// header (integer seconds, minimum 1); the value is clamped to a whole second >= 1 so a
+// non-positive or fractional back-off never produces a non-conformant header.
+export function rateLimitedResponse(
+  instance: string,
+  detail: string,
+  retryAfterSeconds: number,
+): Response {
+  const retryAfter = Math.max(1, Math.ceil(retryAfterSeconds));
+  return problemResponse(
+    { ...PROBLEM_CATALOG.rateLimited, detail, instance },
+    { "Retry-After": String(retryAfter) },
+  );
 }

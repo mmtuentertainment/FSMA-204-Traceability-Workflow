@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import type { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
 
 import { stableStringify } from "../shared/canonical-json.ts";
+import type { RateLimiter } from "../security/rate-limit.ts";
 
 export const EXCEPTION_REVIEW_OPERATION = "exception.review.update";
 export const TRACEABILITY_EXCEPTION_RESOURCE_TYPE = "traceability_exception";
@@ -74,6 +75,9 @@ export interface ProviderExceptionReviewRequest {
   requestHash?: string;
   reservationTtlMs?: number;
   replayHeaders?: Record<string, string | number | undefined>;
+  // OPTIONAL rate-limit seam. Checked AFTER RBAC and BEFORE the idempotency reservation.
+  // Absent (or permissive) => behavior is byte-identical to the un-limited path.
+  limiter?: RateLimiter;
 }
 
 export interface ProviderProblemDetails {
@@ -112,6 +116,7 @@ export type ProviderExceptionReviewOutcome =
       storedResponseBody: ProviderExceptionRecord | null;
     }
   | { status: "in_flight"; idempotencyRecordId: number; retryAfterSeconds: number }
+  | { status: "rate_limited"; retryAfterSeconds: number }
   | { status: "forbidden" }
   | { status: "not_found" }
   | { status: "validation_error"; detail: string };
@@ -574,6 +579,24 @@ export async function reviewTraceabilityExceptionWithProvider(
 
   if (!membership || !canReviewExceptions(membership.role)) {
     return { status: "forbidden" };
+  }
+
+  // Optional rate-limit checkpoint: AFTER RBAC (an unauthorized actor is forbidden, not
+  // rate-limited) and BEFORE the idempotency reservation, so a deny writes no rows and
+  // needs no cleanup. Absent limiter => this branch is skipped and the path is unchanged.
+  if (request.limiter) {
+    const decision = await request.limiter.check({
+      tenantId: request.tenantId,
+      actorId: request.actorAuthSubjectId,
+      action: EXCEPTION_REVIEW_OPERATION,
+      resourceRef: request.exceptionId,
+    });
+    if (decision.status === "deny") {
+      return {
+        status: "rate_limited",
+        retryAfterSeconds: Math.max(1, Math.ceil(decision.retryAfterSeconds)),
+      };
+    }
   }
 
   const now = request.now ?? new Date();

@@ -7,7 +7,7 @@
 //
 // Steps (all in-process):
 //   1. Clean + recreate the V8 coverage scratch dir under .coverage-tmp/.
-//   2. Run the provider suites SEQUENTIALLY (a1, a2, a3, then a4) under NODE_V8_COVERAGE.
+//   2. Run the provider suites SEQUENTIALLY (a1, a2, a3, a4, then a5) under NODE_V8_COVERAGE.
 //      They share tables and TRUNCATE between cases, so running them in parallel
 //      would race; sequential spawnSync preserves order. A failing suite
 //      propagates its non-zero exit (this is what makes the CI job actually
@@ -42,6 +42,7 @@ const SUITES = [
   path.join("tests", "db", "exception-review-provider-a2.test.ts"),
   path.join("tests", "db", "exception-review-provider-a3.test.ts"),
   path.join("tests", "db", "exception-review-provider-a4.test.ts"),
+  path.join("tests", "db", "exception-review-provider-a5.test.ts"),
 ];
 
 function parseOut(argv) {
