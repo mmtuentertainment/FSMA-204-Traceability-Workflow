@@ -18,6 +18,7 @@
     "test:exception-review:patch": "node --experimental-strip-types tests/exception-review-patch.test.ts",
     "test:db": "node --experimental-strip-types tests/db/exception-review-provider-a1.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a2.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a3.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a4.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a5.test.ts",
     "test:db:coverage": "node scripts/run-db-coverage.mjs",
+    "test:db:enforcement": "node --experimental-strip-types tests/db/audit-append-only-enforcement.test.ts",
     "fallow:ci": "fallow audit --fail-on-issues"
   },
   "engines": {

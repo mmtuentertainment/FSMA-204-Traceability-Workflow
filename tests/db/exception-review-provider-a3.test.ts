@@ -214,7 +214,7 @@ const tests: TestCase[] = [
     },
   },
   {
-    name: "append-only is a convention, not DB-enforced: privileged raw UPDATE and DELETE on audit_events both succeed (A4-20)",
+    name: "audit_events is DB-enforced append-only: privileged raw UPDATE and DELETE are both rejected by the ENABLE ALWAYS trigger (A4-20)",
     async run() {
       await resetTables();
       await seedMembership();
@@ -229,53 +229,46 @@ const tests: TestCase[] = [
       const auditId = outcome.auditEventId;
       assert.equal(await countRows("audit_events"), 1);
 
-      // A privileged raw UPDATE succeeds — there is no DB-level trigger / rule / GRANT
-      // enforcing append-only on audit_events (migration 0000 documents append-only
-      // only as a COMMENT). Re-read to prove the mutation actually took effect.
-      const updated = await pool.query(
-        `UPDATE audit_events SET reason = $2 WHERE id = $1`,
-        [auditId, "tampered-by-a3-non-enforcement-proof"],
+      // A privileged raw UPDATE is now REJECTED by the BEFORE UPDATE trigger
+      // (migration 0002, declared ENABLE ALWAYS) even though this connection is the
+      // Postgres owner/superuser. The distinctive custom SQLSTATE 99001 is the
+      // assertion target — append-only is enforced at the DB layer, not by COMMENT.
+      await assert.rejects(
+        async () => {
+          await pool.query(`UPDATE audit_events SET reason = $2 WHERE id = $1`, [
+            auditId,
+            "tampered-by-a3-enforcement-proof",
+          ]);
+        },
+        (error: unknown) => {
+          assert.equal((error as { code?: string }).code, "99001");
+          return true;
+        },
       );
-      assert.equal(updated.rowCount, 1);
+      // The row is unchanged — the trigger fires BEFORE any row is touched.
       const afterUpdate = await pool.query<{ reason: string | null }>(
         `SELECT reason FROM audit_events WHERE id = $1`,
         [auditId],
       );
-      assert.equal(
-        afterUpdate.rows[0]?.reason,
-        "tampered-by-a3-non-enforcement-proof",
-      );
+      assert.equal(afterUpdate.rows[0]?.reason, "ambiguous_lot_code");
 
-      // The accepted transition's completed idempotency record FK-references this audit
-      // row (idempotency_records.audit_event_id, ON DELETE no action). That FK is a
-      // REFERENTIAL constraint, NOT an append-only guard — clear it so the DELETE below
-      // exercises only the (absent) append-only enforcement on audit_events itself.
-      await pool.query(
-        `UPDATE idempotency_records SET audit_event_id = NULL WHERE audit_event_id = $1`,
-        [auditId],
+      // A privileged raw DELETE is rejected for the same reason. No FK-NULL juggling
+      // is needed: the BEFORE ... FOR EACH STATEMENT trigger fires before any
+      // referential-integrity check, so the idempotency FK never participates.
+      await assert.rejects(
+        async () => {
+          await pool.query(`DELETE FROM audit_events WHERE id = $1`, [auditId]);
+        },
+        (error: unknown) => {
+          assert.equal((error as { code?: string }).code, "99001");
+          return true;
+        },
       );
+      assert.equal(await countRows("audit_events"), 1);
 
-      // A privileged raw DELETE succeeds for the same reason: append-only is not
-      // enforced at the database layer in this scaffold.
-      const deleted = await pool.query(
-        `DELETE FROM audit_events WHERE id = $1`,
-        [auditId],
-      );
-      assert.equal(deleted.rowCount, 1);
-      assert.equal(await countRows("audit_events"), 0);
-
-      // Documented expectation: append-only audit evidence is a CONVENTION in the
-      // current repository/service slice. DB-level enforcement is deferred to Batch B
-      // runtime hardening (T6/T9).
-      //
-      // NOTE for Batch B — this test connects as the Postgres superuser/owner, which
-      // BYPASSES grants, so a `REVOKE UPDATE,DELETE` alone would NOT flip this guard
-      // (the raw UPDATE/DELETE above would still succeed = silently green). Enforce via
-      // a BEFORE UPDATE/DELETE trigger (declare it ENABLE ALWAYS — fires for the
-      // owner/superuser too) AND/OR re-run this test as a restricted non-owner role,
-      // then invert the rowCount===1 success asserts above to expect rejection. This is
-      // the regression guard that must flip — and demand updating — the day enforcement
-      // is added.
+      // The grant-layer denial (restricted runtime role → 42501) and the replica-mode
+      // ENABLE ALWAYS proof live in tests/db/audit-append-only-enforcement.test.ts.
+      // This case carries the owner/superuser-DML rejection leg of the 3-way matrix.
     },
   },
 ];

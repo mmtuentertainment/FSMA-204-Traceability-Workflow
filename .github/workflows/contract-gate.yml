@@ -108,11 +108,29 @@ jobs:
       - name: Apply migrations to the test database
         run: npx drizzle-kit migrate --config drizzle.config.ts
 
+      - name: Bootstrap runtime roles
+        # Idempotent role + per-table grant + REVOKE TRUNCATE bootstrap, applied as the
+        # postgres superuser (job-level DATABASE_URL). Separate from the committed
+        # migrations so no prod creds live in version-controlled SQL. psql is preinstalled
+        # on ubuntu-latest.
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f lib/db/roles/runtime-roles.sql
+
       - name: Run provider DB suites under coverage (regenerate a fresh snapshot)
         # Running the suites under coverage IS the execution path: a failing provider
         # test fails the job (this closes the gap that tests/db/* never ran in CI).
         # Fresh coverage goes to a temp --out so the committed snapshot is never mutated.
         run: npm run test:db:coverage -- --out .coverage-tmp/fresh.json
+
+      - name: Run append-only enforcement suite
+        # The restricted-role enforcement proofs (grant deny 42501 / trigger reject
+        # 99001 / replica ENABLE ALWAYS / matrix-sufficiency / TRUNCATE tripwire /
+        # role-shape). A thrown assert exits non-zero → fails the job → blocks the PR,
+        # gating exactly like test:db:coverage. The owner leg uses the job-level
+        # TEST_DATABASE_URL; the two restricted roles are step-scoped below.
+        env:
+          TEST_APP_RUNTIME_DATABASE_URL: postgresql://fsma204_app_runtime:fsma204_app_runtime@127.0.0.1:5432/fsma204_provider_test
+          TEST_AUDIT_MUTATOR_DATABASE_URL: postgresql://fsma204_audit_mutator:fsma204_audit_mutator@127.0.0.1:5432/fsma204_provider_test
+        run: npm run test:db:enforcement
 
       - name: Coverage freshness guard (semantic, strict)
         # Compare fallow's 3-way verdict computed from the COMMITTED snapshot vs from the

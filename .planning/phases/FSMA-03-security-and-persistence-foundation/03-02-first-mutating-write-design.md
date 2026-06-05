@@ -157,7 +157,7 @@ Boundary order under design: **(1) resolve context -> (2) authorize action -> (3
 6. Audit storage model + retention window.
 7. Whether the first slice enables rate limiting (and thus wires `429`/`Retry-After`) now or defers it.
 8. Whether the public MockRecall fixture routes become authenticated or stay public.
-9. Whether the activation batch is one slice or split (e.g. persistence+auth wiring, then the write).
+9. Whether the activation batch is one slice or split (e.g. persistence+auth wiring, then the write). **Resolved 2026-06-05: split — B0 (DB-hardening: append-only trigger + restricted runtime role, no route) then B1 (route wiring + runtime hardening). See 03-03 / delta 0062.**
 
 ## Explicit Statement
 
