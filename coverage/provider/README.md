@@ -13,7 +13,7 @@ The functions that otherwise trip coverage-blind CRAP at `maxCrap: 30`:
 
 - `lib/db/exception-review-provider.ts` — `reviewTraceabilityExceptionWithProvider`,
   `reserveIdempotencyRecord`, `applyTenantScopedExceptionReview` (function-entry coverage by the
-  Batch A1/A2 provider tests — sufficient for the CRAP gate). Statement/branch coverage is **not**
+  Batch A1/A2/A3 provider tests — sufficient for the CRAP gate). Statement/branch coverage is **not**
   100%: e.g. the `stableStringify` array branch is unexercised and several provider branches are
   cold; the snapshot exists to make CRAP reflect real coverage, not to assert full-path coverage.
 - `lib/shared/canonical-json.ts` — the shared `stableStringify` request-hash helper.
@@ -32,19 +32,19 @@ so the same file matches on both Windows (local hook) and Linux (CI).
 
 ## Regenerate
 
-Requires a disposable PostgreSQL test DB (the a1/a2 suites are provider-backed). Use
+Requires a disposable PostgreSQL test DB (the a1/a2/a3 suites are provider-backed). Use
 `127.0.0.1`, never `localhost` (IPv6 `::1` → `pg.Pool` ECONNRESET against a Docker port).
 
 ```bash
 # 1. disposable Postgres
 docker run -d --name fsma204-cov-pg \
-  -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=fsma204_a1a2_test \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=fsma204_provider_test \
   -p 55432:5432 postgres:16-alpine
-export DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/fsma204_a1a2_test"
-export TEST_DATABASE_URL="$DATABASE_URL"        # db name contains "test" → passes both a1 & a2 fences
+export DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/fsma204_provider_test"
+export TEST_DATABASE_URL="$DATABASE_URL"        # db name contains "test" → passes all provider fences (a1/a2/a3)
 npx drizzle-kit migrate --config drizzle.config.ts        # apply schema to a FRESH db
 
-# 2. regenerate the snapshot: runs both suites under coverage, converts V8 -> Istanbul
+# 2. regenerate the snapshot: runs all provider suites (a1/a2/a3) under coverage, converts V8 -> Istanbul
 #    via c8, then normalizes (repo-relative POSIX paths, -1 -> 0, lib/** only, deterministic).
 npm run test:db:coverage                                  # writes coverage/provider/coverage-final.json
 
