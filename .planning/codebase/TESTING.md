@@ -115,7 +115,7 @@ try {
 - **Setup:** per-case explicit reset → seed → act. DB suites call `resetTables()` (`TRUNCATE ... RESTART IDENTITY CASCADE`) then `seedMembership()` / `seedException()`; the fixture suite calls `resetExceptionReviewFixtures()` and relies on a documented per-case ordering for replay/conflict cases.
 - **Teardown:** a top-level `try { ... } finally { ... }` guarantees resource cleanup — `await pool.end()` (DB suites), `await stopServer()` (smoke), env-var restoration (`db-client-import`). Always wrap suite execution in `try/finally`.
 - **Assertion style:** flat, explicit `assert.equal`/`assert.deepEqual` with literal expected values; a `name` string per case substitutes for nested describe blocks. Smoke tests pass a rich `context` string as the assertion message (`tests/mock-recall-contract-smoke.mjs`, `formatResponseContext`).
-- **Custom assertion helpers** narrow types and de-duplicate: `assertAccepted(outcome)` (an `asserts outcome is ...` function, `tests/db/exception-review-provider-a1.test.ts:212`), `assertProblem` / `assertProblemInstance` (validate RFC 9457 Problem Details: status, `application/problem+json` content type, `type: "about:blank"`, `instance`) in the fixture PATCH suite; the smoke test's equivalent is `assertProblemDetails`.
+- **Custom assertion helpers** narrow types and de-duplicate: `assertAccepted(outcome)` (an `asserts outcome is ...` function, `tests/db/exception-review-provider-a1.test.ts:216`), `assertProblem` / `assertProblemInstance` (validate RFC 9457 Problem Details: status, `application/problem+json` content type, `type: "about:blank"`, `instance`) in the fixture PATCH suite; the smoke test's equivalent is `assertProblemDetails`.
 
 ## Mocking
 
