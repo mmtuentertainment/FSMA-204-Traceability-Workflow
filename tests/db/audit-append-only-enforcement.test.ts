@@ -287,6 +287,20 @@ const tests: TestCase[] = [
         `SELECT pg_get_userbyid(relowner) AS owner FROM pg_class WHERE relname = 'audit_events'`,
       );
       assert.notEqual(owner.rows[0]?.owner, "fsma204_app_runtime");
+
+      // Prove the name's final clause rather than only inferring it from the flags
+      // above: app_runtime is neither a member of nor the owner role, so SET ROLE to
+      // the owner/superuser is denied (42501). This is the last test and the failed
+      // statement starts no transaction, so the transient error leaks no role state.
+      await assert.rejects(
+        async () => {
+          await appRuntimePool.query(`SET ROLE postgres`);
+        },
+        (error: unknown) => {
+          assert.equal(code(error), "42501"); // permission denied to set role
+          return true;
+        },
+      );
     },
   },
 ];

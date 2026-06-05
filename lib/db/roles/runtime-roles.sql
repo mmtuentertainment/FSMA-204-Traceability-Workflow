@@ -32,9 +32,25 @@ BEGIN
 END
 $$;
 
+-- Enforce role ATTRIBUTES on every run. The schema-wide REVOKE below converges the
+-- table/column PRIVILEGES, but not attributes — so a role that pre-existed with
+-- SUPERUSER/CREATEDB/etc. is tightened back here. These flags are exactly what the
+-- P6 role-shape proof asserts (NOSUPERUSER/NOBYPASSRLS/NOCREATEROLE) plus NOCREATEDB
+-- hygiene; together with the REVOKE this makes the script convergent, not merely
+-- non-erroring, on re-run.
+ALTER ROLE fsma204_app_runtime   NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS LOGIN;
+ALTER ROLE fsma204_audit_mutator NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS LOGIN;
+
 -- Schema access (PUBLIC keeps USAGE on schema public by default in PG16; explicit
 -- here for robustness — idempotent).
 GRANT USAGE ON SCHEMA public TO fsma204_app_runtime, fsma204_audit_mutator;
+
+-- Convergence: strip every table/column privilege a pre-existing role may have
+-- accumulated so a re-run yields EXACTLY the least-privilege matrix below — never a
+-- superset. Verified against PG16: a table-level REVOKE ALL also clears column-scoped
+-- grants (e.g. SELECT(id)), which the per-table GRANTs below then re-establish.
+REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public
+  FROM fsma204_app_runtime, fsma204_audit_mutator;
 
 -- ── fsma204_app_runtime — least-privilege, derived from the provider's queries ──
 -- tenant_memberships: RBAC membership lookup (SELECT only).
