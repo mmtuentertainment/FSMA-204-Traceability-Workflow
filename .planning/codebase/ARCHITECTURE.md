@@ -167,7 +167,7 @@ The parallel **persisted** write path lives in `lib/db/exception-review-provider
   - `app/api/traceability/exceptions/[exceptionId]/route.ts` — `PATCH`.
 - **App shell:** `app/layout.tsx` (root layout), `app/page.tsx` (placeholder page).
 - **Tooling / config entry points:** `drizzle.config.ts` (drizzle-kit), `next.config` is absent (Next defaults), `package.json` scripts (`dev`, `build`, `start`, `typecheck`, `api:*`, `db:*`, `test:*`, `fallow:ci`).
-- **Test entry points** (declared as fallow reachability roots in `.fallowrc.jsonc` via the globs `tests/**/*.test.ts`, `tests/**/*.test.mts`, `tests/**/*.mjs`, `scripts/**/*.mjs`): `tests/exception-review-patch.test.ts`, `tests/db/exception-review-provider-a1.test.ts`, `tests/db/exception-review-provider-a2.test.ts`, `tests/db-client-import.test.ts`, `tests/mock-recall-contract-smoke.mjs`, and `scripts/*.mjs` (coverage tooling).
+- **Test entry points** (declared as fallow reachability roots in `.fallowrc.jsonc` via the globs `tests/**/*.test.ts`, `tests/**/*.test.mts`, `tests/**/*.mjs`, `scripts/**/*.mjs`): `tests/exception-review-patch.test.ts`, `tests/db/exception-review-provider-a1.test.ts` through `tests/db/exception-review-provider-a5.test.ts`, `tests/db-client-import.test.ts`, `tests/mock-recall-contract-smoke.mjs`, and `scripts/*.mjs` (coverage tooling).
 - **CI entry point:** `.github/workflows/contract-gate.yml` (two jobs: `verify` and `db-provider-tests`).
 
 ## Architectural Constraints

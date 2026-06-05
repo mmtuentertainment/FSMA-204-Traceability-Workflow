@@ -20,8 +20,8 @@ This is a fixture-only / scaffold-stage repository. There is **no third-party te
 npm run test:exception-review:patch   # fixture-only PATCH suite (type-stripped .ts)
 npm run test:mock-recall:contract     # boots `next start`, hits live routes (.mjs)
 npm run test:db-client:import         # DB client import/guard check (type-stripped .ts)
-npm run test:db                        # provider-backed Postgres suites a1 + a2 + a3 (needs TEST_DATABASE_URL)
-npm run test:db:coverage               # runs a1+a2+a3 under V8 coverage, regenerates the snapshot
+npm run test:db                        # provider-backed Postgres suites a1 + a2 + a3 + a4 + a5 (needs TEST_DATABASE_URL)
+npm run test:db:coverage               # runs a1+a2+a3+a4+a5 under V8 coverage, regenerates the snapshot
 npm run db:check                       # drizzle migration check (db:migrations:check) + db-client import test
 npm run api:check                      # api:lint (redocly lint) + api:types:check (openapi-typescript --check)
 npm run typecheck                      # tsc --noEmit
@@ -32,7 +32,7 @@ Exact script definitions:
 - `test:exception-review:patch`: `node --experimental-strip-types tests/exception-review-patch.test.ts`
 - `test:mock-recall:contract`: `node tests/mock-recall-contract-smoke.mjs`
 - `test:db-client:import`: `node --experimental-strip-types tests/db-client-import.test.ts`
-- `test:db`: `node --experimental-strip-types tests/db/exception-review-provider-a1.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a2.test.ts`
+- `test:db`: `node --experimental-strip-types tests/db/exception-review-provider-a1.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a2.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a3.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a4.test.ts && node --experimental-strip-types tests/db/exception-review-provider-a5.test.ts`
 - `test:db:coverage`: `node scripts/run-db-coverage.mjs`
 - `db:check`: `npm run db:migrations:check && npm run test:db-client:import` (where `db:migrations:check` is `drizzle-kit check --config drizzle.config.ts`)
 - `api:check`: `npm run api:lint && npm run api:types:check`
@@ -47,8 +47,11 @@ tests/
 ├── db-client-import.test.ts              # lib/db/client.ts import + missing-env guard
 ├── mock-recall-contract-smoke.mjs        # live-server contract smoke (GET routes + CSV)
 └── db/
-    ├── exception-review-provider-a1.test.ts   # provider against real Postgres
-    └── exception-review-provider-a2.test.ts   # provider against real Postgres
+    ├── exception-review-provider-a1.test.ts   # provider against real Postgres (idempotency resource-scope)
+    ├── exception-review-provider-a2.test.ts   # provider against real Postgres (mismatch / isolation / audit conflicts)
+    ├── exception-review-provider-a3.test.ts   # append-only audit surface proofs (A4-18/19/20)
+    ├── exception-review-provider-a4.test.ts   # atomicity forced-fault rollback (A3-15/16, A4-17)
+    └── exception-review-provider-a5.test.ts   # rate-limit posture (Area 5)
 ```
 
 **Naming:**
@@ -179,14 +182,14 @@ The DB suites also provide seed factories with optional-arg defaults: `seedMembe
 - A **committed Istanbul snapshot** lives at `coverage/provider/coverage-final.json` (docs: `coverage/provider/README.md`).
 - `fallow audit` reads it via the `FALLOW_COVERAGE` env var (set in CI and the local commit hook).
 - It **fails closed:** `fallow` matches coverage to a function by content hash; editing a covered function changes its hash, the snapshot stops matching, the function reads as 0%, CRAP re-inflates, and the gate fails — forcing a regenerate.
-- Tool: `c8` (devDependency `^11.0.0`) converts Node V8 coverage to Istanbul JSON. `scripts/run-db-coverage.mjs` orchestrates V8 capture of the a1/a2/a3 suites (run sequentially under `NODE_V8_COVERAGE`) and calls `scripts/normalize-coverage.mjs` (repo-relative POSIX paths, `-1` → `0`, `lib/**` only, deterministic key order for cross-OS byte-stable output).
+- Tool: `c8` (devDependency `^11.0.0`) converts Node V8 coverage to Istanbul JSON. `scripts/run-db-coverage.mjs` orchestrates V8 capture of the a1-a5 suites (run sequentially under `NODE_V8_COVERAGE`) and calls `scripts/normalize-coverage.mjs` (repo-relative POSIX paths, `-1` → `0`, `lib/**` only, deterministic key order for cross-OS byte-stable output).
 
 **Regenerate / view coverage:**
 ```bash
 # Requires a disposable Postgres test DB; use 127.0.0.1, never localhost.
 # (Port 55432 below is illustrative for a local container — match your own.)
 export DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/fsma204_provider_test"
-export TEST_DATABASE_URL="$DATABASE_URL"          # db name has the "test" token → passes every suite fence (a1/a2/a3)
+export TEST_DATABASE_URL="$DATABASE_URL"          # db name has the "test" token → passes every suite fence (a1-a5)
 npx drizzle-kit migrate --config drizzle.config.ts
 npm run test:db:coverage                          # writes coverage/provider/coverage-final.json
 
@@ -203,7 +206,7 @@ CI's `db-provider-tests` job (in `.github/workflows/contract-gate.yml`) provisio
 - `tests/db-client-import.test.ts` — imports `lib/db/client.ts` and asserts the exported functions exist (`createDbClient`, `getDb`, `closeDbClient`) and that `createDbClient()`/`getDb()` throw when `DATABASE_URL` is absent (uses `assert.throws` with a message regex).
 
 **Integration tests (real PostgreSQL):**
-- `tests/db/exception-review-provider-a1.test.ts` and `...-a2.test.ts` — run the provider (`lib/db/exception-review-provider.ts`) against a live Postgres via `pg.Pool`. They require `TEST_DATABASE_URL`, and **refuse to run unless the DB name matches `/(^|[_-])(test|a1)([_-]|$)/i`** (a safety fence, `resolveTestDatabaseUrl`). `ensureMigrated()` asserts the expected schema/columns exist before the loop. CI provisions a `postgres:16-alpine` service and applies migrations with `npx drizzle-kit migrate`.
+- `tests/db/exception-review-provider-a1.test.ts` through `...-a5.test.ts` — run the provider (`lib/db/exception-review-provider.ts`, plus the Batch A5 rate-limit checkpoint seam) against a live Postgres via `pg.Pool`. They require `TEST_DATABASE_URL`, and each **refuses to run unless the DB name matches its per-suite fence `/(^|[_-])(test|aN)([_-]|$)/i`** (the shared `test` token satisfies all five; `resolveTestDatabaseUrl`). `ensureMigrated()` asserts the expected schema/columns exist before the loop. CI provisions a `postgres:16-alpine` service and applies migrations with `npx drizzle-kit migrate`.
 
 **Contract / smoke tests (live server):**
 - `tests/mock-recall-contract-smoke.mjs` — `spawn`s `next start` (via `process.execPath` running `node_modules/next/dist/bin/next start`) on `127.0.0.1` at a configurable port (env `MOCK_RECALL_SMOKE_PORT`, default 3227), polls a probe URL until ready (or detects early exit via `server.exitCode`), then `fetch`es the live MockRecall GET routes. Asserts the fixture detail JSON, the FDA-style CSV packet (exact CRLF-joined body, header/row, and `assert.doesNotMatch` for disallowed compliance language), and RFC 9457 404 Problem Details for a missing id. Cleans up with `taskkill` (Windows) or `SIGTERM`.
