@@ -45,8 +45,11 @@ FSMA 204 Workflow Product/
 │       └── canonical-json.ts             # stableStringify (shared hasher)
 ├── tests/
 │   ├── db/
-│   │   ├── exception-review-provider-a1.test.ts   # Postgres-backed provider suite
-│   │   └── exception-review-provider-a2.test.ts   # Postgres-backed provider suite
+│   │   ├── exception-review-provider-a1.test.ts   # Postgres-backed provider suite (idempotency resource-scope)
+│   │   ├── exception-review-provider-a2.test.ts   # Postgres-backed provider suite (mismatch/isolation/audit)
+│   │   ├── exception-review-provider-a3.test.ts   # Postgres-backed provider suite (append-only audit surface)
+│   │   ├── exception-review-provider-a4.test.ts   # Postgres-backed provider suite (atomicity rollback)
+│   │   └── exception-review-provider-a5.test.ts   # Postgres-backed provider suite (rate-limit posture)
 │   ├── db-client-import.test.ts          # import-safety guard for lib/db/client.ts
 │   ├── exception-review-patch.test.ts    # PATCH route focused test
 │   └── mock-recall-contract-smoke.mjs    # MockRecall contract smoke check
