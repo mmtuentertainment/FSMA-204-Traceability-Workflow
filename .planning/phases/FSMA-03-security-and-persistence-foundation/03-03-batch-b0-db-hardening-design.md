@@ -149,7 +149,7 @@ Owner UPDATE/DELETE rejection proves the trigger applies to **owner DML**; the *
    `SELECT` → immune to privilege false positives (review #1 amendment #4); statement trigger still fires on zero rows.
 3. **Replica-mode `ENABLE ALWAYS` proof** — owner conn (`TEST_DATABASE_URL`):
    `BEGIN; SET LOCAL session_replication_role = replica; UPDATE audit_events …` → **`99001`**; `ROLLBACK`.
-   (`session_replication_role` is a superuser-only GUC; the owner satisfies it.)
+   (`session_replication_role` is settable only by a superuser (or a role granted `SET` on the parameter); the CI superuser/owner conn satisfies it.)
 4. **Matrix-sufficiency** — `app_runtime` runs the **full provider happy-path txn → SUCCEEDS** (proves the grant set
    incl. `SELECT (id)` ⇒ B1 repoint is a verified no-op).
 5. **TRUNCATE tripwire** — `has_table_privilege('fsma204_app_runtime', 'audit_events', 'TRUNCATE') = false` and same for
